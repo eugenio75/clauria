@@ -72,7 +72,7 @@ const Index = () => {
   const [appPhase, setAppPhase] = useState<"splash" | "onboarding" | "conversation">("splash");
   const [isNewSession, setIsNewSession] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { user, loading } = useIntusAuth();
+  const { user, loading, isReady } = useIntusAuth();
   const isGuest = !!user?.is_anonymous;
   const isAuthenticated = !!user;
   const { loadContext, saveProfile, resetContext } = useIntusContext();
@@ -311,8 +311,8 @@ const Index = () => {
     return <SplashScreen onComplete={handleSplashComplete} fadingOut={splashFadingOut} />;
   }
 
-  // Show login screen if not authenticated
-  if (loading) {
+  // Wait until auth is fully restored before deciding which screen to show
+  if (!isReady) {
     return (
       <div className="fixed inset-0 bg-parchment flex items-center justify-center">
         <span className="text-5xl text-trust-blue select-none animate-pulse">✦</span>
@@ -322,6 +322,15 @@ const Index = () => {
 
   if (!isAuthenticated) {
     return <LoginScreen />;
+  }
+
+  // Prevent the empty chat shell from flashing while deciding between welcome and conversation
+  if (isAuthenticated && appPhase === "splash" && !showWelcome) {
+    return (
+      <div className="fixed inset-0 bg-parchment flex items-center justify-center">
+        <span className="text-5xl text-trust-blue select-none animate-pulse">✦</span>
+      </div>
+    );
   }
 
   if (showWelcome) {

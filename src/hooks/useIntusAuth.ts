@@ -7,22 +7,34 @@ export function useIntusAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up listener BEFORE getSession
+    let isMounted = true;
+    let hasInitialized = false;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!isMounted) return;
       setUser(session?.user ?? null);
-      setLoading(false);
+
+      if (hasInitialized) {
+        setLoading(false);
+      }
     });
 
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      if (!isMounted) return;
+
       setUser(session?.user ?? null);
+      hasInitialized = true;
       setLoading(false);
     };
 
-    init();
+    void init();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  return { user, loading };
+  return { user, loading, isReady: !loading };
 }
