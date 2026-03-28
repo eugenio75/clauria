@@ -14,7 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      intus_context: {
+        Row: {
+          current_emotional_theme: string | null
+          id: string
+          last_session_at: string | null
+          ongoing_situation: string | null
+          pending_decisions: Json | null
+          people_involved: Json | null
+          recurring_theme_count: number | null
+          session_count: number | null
+          session_tone: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          current_emotional_theme?: string | null
+          id?: string
+          last_session_at?: string | null
+          ongoing_situation?: string | null
+          pending_decisions?: Json | null
+          people_involved?: Json | null
+          recurring_theme_count?: number | null
+          session_count?: number | null
+          session_tone?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          current_emotional_theme?: string | null
+          id?: string
+          last_session_at?: string | null
+          ongoing_situation?: string | null
+          pending_decisions?: Json | null
+          people_involved?: Json | null
+          recurring_theme_count?: number | null
+          session_count?: number | null
+          session_tone?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      intus_profiles: {
+        Row: {
+          age_range: string | null
+          created_at: string | null
+          id: string
+          life_context: string | null
+          onboarding_complete: boolean | null
+          user_name: string | null
+        }
+        Insert: {
+          age_range?: string | null
+          created_at?: string | null
+          id: string
+          life_context?: string | null
+          onboarding_complete?: boolean | null
+          user_name?: string | null
+        }
+        Update: {
+          age_range?: string | null
+          created_at?: string | null
+          id?: string
+          life_context?: string | null
+          onboarding_complete?: boolean | null
+          user_name?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

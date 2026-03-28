@@ -41,7 +41,7 @@ const SplashScreen = ({ onComplete }: SplashScreenProps) => {
         transition={{ duration: 0.6, delay: 1.0 }}
         className="font-display italic text-muted-foreground text-sm"
       >
-        Come se parlassi con la tua coscienza.
+        Non sei solo.
       </motion.p>
     </motion.div>
   );
