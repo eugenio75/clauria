@@ -187,7 +187,13 @@ const Index = () => {
     scrollToBottom();
   }, [messages, isTyping, scrollToBottom]);
 
-  const sendToAI = async (allMessages: Message[]) => {
+  const sendToAI = async (allMessages: Message[], onboardingData?: {
+    isFirstResponseAfterOnboarding: boolean;
+    name: string;
+    ageRange: string;
+    lifeContext: string;
+    emotionalEntry: string;
+  }) => {
     if (!user) return;
 
     // For anonymous users, don't send to AI if they've hit the limit
@@ -212,6 +218,7 @@ const Index = () => {
           userContext: ctx,
           userId: isAnonymous ? null : user.id,
           localHour: new Date().getHours(),
+          ...(onboardingData ? { onboardingData } : {}),
         },
       });
 
