@@ -5,9 +5,11 @@ interface ChatInputProps {
   onSend: (message: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  guestMessageCount?: number;
+  isAuthenticated?: boolean;
 }
 
-const ChatInput = ({ onSend, disabled, placeholder = "Scrivi qui..." }: ChatInputProps) => {
+const ChatInput = ({ onSend, disabled, placeholder = "Scrivi qui...", guestMessageCount = 0, isAuthenticated = false }: ChatInputProps) => {
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -27,6 +29,13 @@ const ChatInput = ({ onSend, disabled, placeholder = "Scrivi qui..." }: ChatInpu
 
   return (
     <div className="border-t border-border/50 bg-parchment px-4 py-3 pb-safe">
+      {!isAuthenticated && guestMessageCount >= 3 && (
+        <p className="text-xs text-muted-foreground/60 italic text-center mt-0 mb-2">
+          {`Hai ancora ${5 - guestMessageCount} ${
+            5 - guestMessageCount === 1 ? 'conversazione' : 'conversazioni'
+          } oggi come ospite.`}
+        </p>
+      )}
       <div className="flex items-end gap-2 max-w-[600px] mx-auto">
         <textarea
           ref={textareaRef}
