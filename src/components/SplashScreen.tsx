@@ -1,0 +1,50 @@
+import { motion } from "framer-motion";
+import { useEffect } from "react";
+
+interface SplashScreenProps {
+  onComplete: () => void;
+}
+
+const SplashScreen = ({ onComplete }: SplashScreenProps) => {
+  useEffect(() => {
+    const timer = setTimeout(onComplete, 2500);
+    return () => clearTimeout(timer);
+  }, [onComplete]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+      className="fixed inset-0 bg-parchment flex flex-col items-center justify-center"
+    >
+      <motion.span
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+        className="text-7xl text-trust-blue mb-6 select-none"
+      >
+        ✦
+      </motion.span>
+      <motion.h1
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.6 }}
+        className="font-display text-4xl tracking-wide text-foreground mb-3"
+      >
+        INTUS
+      </motion.h1>
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6, delay: 1.0 }}
+        className="font-display italic text-muted-foreground text-sm"
+      >
+        Come se parlassi con la tua coscienza.
+      </motion.p>
+    </motion.div>
+  );
+};
+
+export default SplashScreen;
