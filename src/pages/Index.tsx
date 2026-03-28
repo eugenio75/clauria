@@ -57,7 +57,7 @@ const ONBOARDING_STEPS = [
     field: "lifeContext" as const,
   },
   {
-    aiMessage: "Capito. E in questo momento — c'è qualcosa di specifico\nche ti pesa, o è più una sensazione generale che porti dentro?",
+    aiMessageFn: (name: string) => `Capito, ${name}. E in questo momento — stai attraversando qualcosa di difficile, devi prendere una decisione importante, o c'è qualcosa dentro che vorresti capire meglio?`,
     field: "emotionalEntry" as const,
   },
 ];
