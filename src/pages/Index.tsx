@@ -10,6 +10,7 @@ import SilenceMode from "../components/SilenceMode";
 import SplashScreen from "../components/SplashScreen";
 import UnsentLetter from "../components/UnsentLetter";
 import LoginScreen from "../components/LoginScreen";
+import WelcomeScreen from "../components/WelcomeScreen";
 import { useIntusAuth } from "../hooks/useIntusAuth";
 import { useIntusContext } from "../hooks/useIntusContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,16 +30,6 @@ interface UserProfile {
   emotionalEntry: string;
   onboardingComplete: boolean;
 }
-
-const PRESENTATION_MESSAGE = `Ciao. Sono INTUS.
-
-Sono qui per ascoltarti.
-
-Puoi dirmi quello che hai dentro: quello che ti turba, quello che non riesci a risolvere, quello che non hai ancora detto a nessuno.
-
-Anche di notte. Anche le cose più difficili.
-
-Prima di cominciare, aiutami a conoscerti un po'.`;
 
 const ONBOARDING_STEPS = [
   {
@@ -61,6 +52,7 @@ const ONBOARDING_STEPS = [
 
 const Index = () => {
   const [showSplash, setShowSplash] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -107,11 +99,13 @@ const Index = () => {
   }, []);
 
   const startOnboarding = useCallback(() => {
+    setShowWelcome(true);
+  }, []);
+
+  const handleWelcomeComplete = useCallback(() => {
+    setShowWelcome(false);
     setAppPhase("onboarding");
-    setTimeout(() => {
-      addAIMessage(PRESENTATION_MESSAGE);
-      setTimeout(() => addAIMessage(ONBOARDING_STEPS[0].aiMessage!), 1500);
-    }, 500);
+    setTimeout(() => addAIMessage(ONBOARDING_STEPS[0].aiMessage!), 500);
   }, [addAIMessage]);
 
   const startConversation = useCallback(async () => {
@@ -297,11 +291,8 @@ const Index = () => {
     setProfile({ name: "", ageRange: "", lifeContext: "", emotionalEntry: "", onboardingComplete: false });
     setMessages([]);
     setOnboardingStep(0);
-    setAppPhase("onboarding");
-    setTimeout(() => {
-      addAIMessage(PRESENTATION_MESSAGE);
-      setTimeout(() => addAIMessage(ONBOARDING_STEPS[0].aiMessage!), 1500);
-    }, 500);
+    hasStartedRef.current = false;
+    setShowWelcome(true);
   };
 
   // Sign out anonymous sessions so LoginScreen works cleanly
