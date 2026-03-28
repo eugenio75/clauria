@@ -52,6 +52,7 @@ const ONBOARDING_STEPS = [
 
 const Index = () => {
   const [showSplash, setShowSplash] = useState(true);
+  const [splashFadingOut, setSplashFadingOut] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -142,7 +143,11 @@ const Index = () => {
   }, [user, loadContext, addAIMessage, startOnboarding]);
 
   const handleSplashComplete = useCallback(() => {
-    setShowSplash(false);
+    setSplashFadingOut(true);
+    setTimeout(() => {
+      setShowSplash(false);
+      setSplashFadingOut(false);
+    }, 400);
   }, []);
 
   // When splash is done and user is authenticated, start the flow

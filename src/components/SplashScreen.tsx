@@ -3,9 +3,10 @@ import { useEffect } from "react";
 
 interface SplashScreenProps {
   onComplete: () => void;
+  fadingOut?: boolean;
 }
 
-const SplashScreen = ({ onComplete }: SplashScreenProps) => {
+const SplashScreen = ({ onComplete, fadingOut = false }: SplashScreenProps) => {
   useEffect(() => {
     const timer = setTimeout(onComplete, 2500);
     return () => clearTimeout(timer);
@@ -14,10 +15,9 @@ const SplashScreen = ({ onComplete }: SplashScreenProps) => {
   return (
     <motion.div
       initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
-      className="fixed inset-0 bg-parchment flex flex-col items-center justify-center"
+      animate={{ opacity: fadingOut ? 0 : 1 }}
+      transition={{ duration: fadingOut ? 0.4 : 0.5 }}
+      className="fixed inset-0 bg-parchment flex flex-col items-center justify-center z-50"
     >
       <motion.span
         initial={{ opacity: 0, scale: 0.8 }}
