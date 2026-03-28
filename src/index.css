@@ -6,52 +6,52 @@
 
 @layer base {
   :root {
-    --background: 40 33% 94%;
-    --foreground: 0 0% 10%;
+    --background: 30 25% 95%;
+    --foreground: 260 10% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
+    --card-foreground: 260 10% 15%;
 
-    --popover: 40 33% 93%;
-    --popover-foreground: 0 0% 10%;
+    --popover: 30 20% 94%;
+    --popover-foreground: 260 10% 15%;
 
-    --primary: 209 52% 36%;
-    --primary-foreground: 40 33% 94%;
+    --primary: 260 30% 55%;
+    --primary-foreground: 30 25% 96%;
 
-    --secondary: 120 13% 49%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 260 15% 72%;
+    --secondary-foreground: 260 10% 15%;
 
-    --muted: 40 18% 88%;
-    --muted-foreground: 40 10% 45%;
+    --muted: 30 15% 90%;
+    --muted-foreground: 260 8% 45%;
 
-    --accent: 209 52% 36%;
-    --accent-foreground: 40 33% 94%;
+    --accent: 260 30% 55%;
+    --accent-foreground: 30 25% 96%;
 
-    --destructive: 0 67% 33%;
-    --destructive-foreground: 40 33% 94%;
+    --destructive: 0 60% 40%;
+    --destructive-foreground: 30 25% 96%;
 
-    --border: 40 15% 82%;
-    --input: 40 15% 82%;
-    --ring: 209 52% 36%;
+    --border: 260 12% 85%;
+    --input: 260 12% 85%;
+    --ring: 260 30% 55%;
 
     --radius: 1rem;
 
     /* INTUS custom tokens */
-    --parchment: 40 33% 94%;
-    --ai-bubble: 0 0% 100%;
-    --user-bubble: 207 48% 93%;
-    --trust-blue: 209 52% 36%;
-    --sage-green: 120 13% 49%;
-    --crisis-red: 0 67% 33%;
+    --parchment: 30 25% 95%;
+    --ai-bubble: 270 20% 97%;
+    --user-bubble: 260 25% 93%;
+    --trust-blue: 260 30% 55%;
+    --sage-green: 150 20% 50%;
+    --crisis-red: 0 60% 40%;
 
-    --sidebar-background: 40 33% 93%;
-    --sidebar-foreground: 0 0% 10%;
-    --sidebar-primary: 209 52% 36%;
-    --sidebar-primary-foreground: 40 33% 94%;
-    --sidebar-accent: 40 20% 88%;
-    --sidebar-accent-foreground: 0 0% 10%;
-    --sidebar-border: 40 15% 82%;
-    --sidebar-ring: 209 52% 36%;
+    --sidebar-background: 30 20% 94%;
+    --sidebar-foreground: 260 10% 15%;
+    --sidebar-primary: 260 30% 55%;
+    --sidebar-primary-foreground: 30 25% 96%;
+    --sidebar-accent: 260 15% 90%;
+    --sidebar-accent-foreground: 260 10% 15%;
+    --sidebar-border: 260 12% 85%;
+    --sidebar-ring: 260 30% 55%;
   }
 }
 
