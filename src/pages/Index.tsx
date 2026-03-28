@@ -296,8 +296,6 @@ const Index = () => {
     setShowWelcome(true);
   };
 
-  // Guest users skip login screen
-  const isAuthenticated = !!user;
 
   if (showSplash) {
     return <SplashScreen onComplete={handleSplashComplete} />;
