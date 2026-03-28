@@ -69,6 +69,7 @@ const Index = () => {
   });
   const [onboardingStep, setOnboardingStep] = useState(0);
   const [appPhase, setAppPhase] = useState<"splash" | "onboarding" | "conversation">("splash");
+  const [isNewSession, setIsNewSession] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { user, loading } = useIntusAuth();
   const isGuest = !!user?.is_anonymous;
@@ -182,9 +183,13 @@ const Index = () => {
           userContext: ctx,
           userId: user.id,
           localHour: new Date().getHours(),
+          isNewSession,
           ...(onboardingData ? { onboardingData } : {}),
         },
       });
+
+      // After first AI call, this is no longer a new session
+      if (isNewSession) setIsNewSession(false);
 
       if (error) throw error;
 
