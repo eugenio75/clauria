@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    --background: 36 33% 93%;
+    --background: 200 25% 94%;
     --foreground: 0 0% 10%;
 
     --card: 0 0% 100%;
@@ -21,8 +21,8 @@
     --secondary: 120 13% 49%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 36 20% 88%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 200 18% 88%;
+    --muted-foreground: 200 10% 45%;
 
     --accent: 209 52% 36%;
     --accent-foreground: 36 33% 93%;
@@ -30,14 +30,14 @@
     --destructive: 0 67% 33%;
     --destructive-foreground: 36 33% 93%;
 
-    --border: 36 15% 82%;
-    --input: 36 15% 82%;
+    --border: 200 15% 82%;
+    --input: 200 15% 82%;
     --ring: 209 52% 36%;
 
     --radius: 1rem;
 
     /* INTUS custom tokens */
-    --parchment: 36 33% 93%;
+    --parchment: 200 25% 94%;
     --ai-bubble: 0 0% 100%;
     --user-bubble: 207 48% 93%;
     --trust-blue: 209 52% 36%;
