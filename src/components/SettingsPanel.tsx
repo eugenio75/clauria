@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -8,9 +9,11 @@ interface SettingsPanelProps {
   userName: string;
   onNameChange: (name: string) => void;
   onResetMemory: () => void;
+  isAuthenticated?: boolean;
+  onLogout?: () => void;
 }
 
-const SettingsPanel = ({ isOpen, onClose, userName, onNameChange, onResetMemory }: SettingsPanelProps) => {
+const SettingsPanel = ({ isOpen, onClose, userName, onNameChange, onResetMemory, isAuthenticated = false, onLogout }: SettingsPanelProps) => {
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(userName);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -127,6 +130,25 @@ const SettingsPanel = ({ isOpen, onClose, userName, onNameChange, onResetMemory 
                     Supporto
                   </a>
                 </div>
+
+                {/* Logout */}
+                {isAuthenticated && (
+                  <div>
+                    <button
+                      onClick={async () => {
+                        await supabase.auth.signOut();
+                        localStorage.removeItem("intus_profile");
+                        localStorage.removeItem("intus_anon_msg_count");
+                        onLogout?.();
+                        onClose();
+                        window.location.reload();
+                      }}
+                      className="text-crisis-red text-[15px] font-medium"
+                    >
+                      Esci dall'account
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
