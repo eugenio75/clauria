@@ -147,6 +147,23 @@ const LoginScreen = () => {
               >
                 ✉️ Usa la tua mail
               </button>
+
+              <div className="relative my-2">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border/40" />
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="bg-ai-bubble px-3 text-xs text-muted-foreground/50">oppure</span>
+                </div>
+              </div>
+
+              <button
+                onClick={handleGuest}
+                disabled={loading}
+                className="w-full text-center text-sm text-muted-foreground/60 italic py-2 transition-opacity disabled:opacity-50"
+              >
+                Entra senza account
+              </button>
             </div>
           )}
 
