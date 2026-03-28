@@ -154,16 +154,16 @@ const Index = () => {
   }, []);
 
   // When splash is done and user is authenticated, check if they have a profile (returning user)
-  // Only auto-skip login for returning users with completed profiles
   const hasCheckedRef = useRef(false);
   useEffect(() => {
     if (!showSplash && isReady && isAuthenticated && !hasCheckedRef.current) {
       hasCheckedRef.current = true;
       setCheckingProfile(true);
       
+      const isContinuingSession = sessionStorage.getItem("intus_session_active") === "true";
+
       loadContext(user!.id).then((ctx) => {
         if (ctx.user_name && ctx.session_count && ctx.session_count > 0) {
-          // Returning user with profile — skip login and go straight to conversation
           setSkipLogin(true);
           setProfile({
             name: ctx.user_name || "",
@@ -174,15 +174,23 @@ const Index = () => {
           });
           setAppPhase("conversation");
 
+          // Mark this tab as having an active session
+          sessionStorage.setItem("intus_session_active", "true");
+
+          // Determine whether to show "Bentornato" or a neutral greeting
+          const hoursSinceLast = ctx.last_session_at
+            ? (Date.now() - new Date(ctx.last_session_at).getTime()) / (1000 * 60 * 60)
+            : Infinity;
+          const showBentornato = !isContinuingSession && hoursSinceLast >= 8;
+
           let welcomeMsg: string;
-          if (ctx.session_count > 1 && ctx.ongoing_situation) {
+          if (showBentornato && ctx.session_count > 1 && ctx.ongoing_situation) {
             welcomeMsg = `Bentornato/a ${ctx.user_name}. L'ultima volta mi parlavi di ${ctx.ongoing_situation}. Come è andata?`;
           } else {
             welcomeMsg = `Ciao ${ctx.user_name}. Sono qui. Di cosa hai bisogno oggi?`;
           }
           setTimeout(() => addAIMessage(welcomeMsg), 500);
         }
-        // If no profile: DON'T skip login. User must choose how to proceed.
       }).catch(() => {
         // No profile — show login screen
       }).finally(() => {
