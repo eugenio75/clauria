@@ -191,20 +191,25 @@ const Index = () => {
     }
   }, [showSplash, isReady, isAuthenticated, user, loadContext, addAIMessage]);
 
-  // When user actively authenticates (session changes from null to user), mark skipLogin
-  const prevUserRef = useRef<string | null>(null);
+  // When user actively authenticates in THIS session (e.g. guest button or OTP),
+  // skip login and start conversation. Track the user id at mount time so we only
+  // react to *new* sign-ins, not stale sessions that were already there.
+  const mountUserRef = useRef<string | undefined>(undefined);
+  const didCaptureMount = useRef(false);
   useEffect(() => {
-    if (isReady && user && !prevUserRef.current) {
-      // User just authenticated in this session — if we haven't checked profile yet, 
-      // we need to let the profile check run. If profile check already ran and didn't skip,
-      // this is a fresh auth action.
-      if (hasCheckedRef.current && !skipLogin && !checkingProfile) {
-        setSkipLogin(true);
-        startConversation();
-      }
+    if (!isReady) return;
+    // Capture the user id that was present at mount (stale session)
+    if (!didCaptureMount.current) {
+      didCaptureMount.current = true;
+      mountUserRef.current = user?.id;
+      return;
     }
-    prevUserRef.current = user?.id ?? null;
-  }, [isReady, user, skipLogin, checkingProfile, startConversation]);
+    // If user changed from what was at mount → this is a fresh auth action
+    if (user && user.id !== mountUserRef.current) {
+      setSkipLogin(true);
+      startConversation();
+    }
+  }, [isReady, user, startConversation]);
 
   useEffect(() => {
     scrollToBottom();
