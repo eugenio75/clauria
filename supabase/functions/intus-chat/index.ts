@@ -407,7 +407,7 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
         body: JSON.stringify({
           model: "google/gemini-2.5-flash",
           messages: [
-            { role: "system", content: systemPrompt },
+            { role: "system", content: finalSystemPrompt },
             ...messages.slice(-10),
           ],
         }),
