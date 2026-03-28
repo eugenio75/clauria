@@ -46,10 +46,11 @@ const LoginScreen = () => {
     if (!email.trim()) return;
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
+      const { data, error } = await supabase.functions.invoke("send-login-otp", {
+        body: { email: email.trim() },
       });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       setStep("otp");
       toast.success("Ti abbiamo inviato un codice. Controlla la mail.");
     } catch (err) {
@@ -64,16 +65,28 @@ const LoginScreen = () => {
     if (otp.length < 6) return;
     setLoading(true);
     try {
-      const { error } = await supabase.auth.verifyOtp({
-        email: email.trim(),
-        token: otp.trim(),
-        type: "email",
+      const { data, error } = await supabase.functions.invoke("verify-login-otp", {
+        body: { email: email.trim(), code: otp.trim() },
       });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      if (data?.tokenHash) {
+        // Use the token hash to verify and create a session
+        const { error: verifyError } = await supabase.auth.verifyOtp({
+          token_hash: data.tokenHash,
+          type: "magiclink",
+        });
+        if (verifyError) throw verifyError;
+      }
+
       toast.success("Bentornato/a.");
     } catch (err) {
       console.error(err);
-      toast.error("Codice non valido. Riprova.");
+      const msg = err instanceof Error && err.message.includes("non valido")
+        ? "Codice non valido o scaduto. Riprova."
+        : "Qualcosa non ha funzionato. Riprova.";
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
