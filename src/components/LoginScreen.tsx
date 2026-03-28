@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
-import { toast } from "sonner";
 
 type AuthStep = "choose" | "email" | "otp";
 
@@ -11,15 +10,20 @@ const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [inlineError, setInlineError] = useState<string | null>(null);
+
+  const clearError = () => setInlineError(null);
 
   const handleGuest = async () => {
     setLoading(true);
+    clearError();
     try {
       const { error } = await supabase.auth.signInAnonymously();
       if (error) throw error;
+      // Session change will be picked up by useIntusAuth → Index will navigate away
     } catch (err) {
       console.error(err);
-      toast.error("Qualcosa non ha funzionato. Riprova.");
+      setInlineError("Qualcosa non ha funzionato. Riprova.");
     } finally {
       setLoading(false);
     }
@@ -27,6 +31,7 @@ const LoginScreen = () => {
 
   const handleGoogle = async () => {
     setLoading(true);
+    clearError();
     try {
       const { error } = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
@@ -34,7 +39,7 @@ const LoginScreen = () => {
       if (error) throw error;
     } catch (err) {
       console.error(err);
-      toast.error("Accesso con Google non riuscito. Riprova.");
+      setInlineError("Accesso con Google non riuscito. Riprova.");
     } finally {
       setLoading(false);
     }
@@ -42,6 +47,7 @@ const LoginScreen = () => {
 
   const handleApple = async () => {
     setLoading(true);
+    clearError();
     try {
       const { error } = await lovable.auth.signInWithOAuth("apple", {
         redirect_uri: window.location.origin,
@@ -49,7 +55,7 @@ const LoginScreen = () => {
       if (error) throw error;
     } catch (err) {
       console.error(err);
-      toast.error("Accesso con Apple non riuscito. Riprova.");
+      setInlineError("Accesso con Apple non riuscito. Riprova.");
     } finally {
       setLoading(false);
     }
@@ -58,6 +64,7 @@ const LoginScreen = () => {
   const handleEmailSubmit = async () => {
     if (!email.trim()) return;
     setLoading(true);
+    clearError();
     try {
       const { data, error } = await supabase.functions.invoke("send-login-otp", {
         body: { email: email.trim() },
@@ -65,10 +72,9 @@ const LoginScreen = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setStep("otp");
-      toast.success("Ti abbiamo inviato un codice. Controlla la mail.");
     } catch (err) {
       console.error(err);
-      toast.error("Qualcosa non ha funzionato. Riprova.");
+      setInlineError("Non riesco a inviare la mail in questo momento. Riprova tra qualche minuto.");
     } finally {
       setLoading(false);
     }
@@ -77,6 +83,7 @@ const LoginScreen = () => {
   const handleOtpVerify = async () => {
     if (otp.length < 6) return;
     setLoading(true);
+    clearError();
     try {
       const { data, error } = await supabase.functions.invoke("verify-login-otp", {
         body: { email: email.trim(), code: otp.trim() },
@@ -85,21 +92,18 @@ const LoginScreen = () => {
       if (data?.error) throw new Error(data.error);
 
       if (data?.tokenHash) {
-        // Use the token hash to verify and create a session
         const { error: verifyError } = await supabase.auth.verifyOtp({
           token_hash: data.tokenHash,
           type: "magiclink",
         });
         if (verifyError) throw verifyError;
       }
-
-      toast.success("Bentornato/a.");
     } catch (err) {
       console.error(err);
       const msg = err instanceof Error && err.message.includes("non valido")
         ? "Codice non valido o scaduto. Riprova."
         : "Qualcosa non ha funzionato. Riprova.";
-      toast.error(msg);
+      setInlineError(msg);
     } finally {
       setLoading(false);
     }
@@ -125,6 +129,20 @@ const LoginScreen = () => {
           <p className="text-foreground text-[15px] leading-relaxed text-center" style={{ lineHeight: "1.8" }}>
             Accedi per iniziare
           </p>
+
+          {/* Inline error message */}
+          <AnimatePresence>
+            {inlineError && (
+              <motion.p
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                className="text-sm text-center text-crisis-red/80 leading-relaxed"
+              >
+                {inlineError}
+              </motion.p>
+            )}
+          </AnimatePresence>
 
           {step === "choose" && (
             <div className="space-y-2.5">
@@ -154,7 +172,7 @@ const LoginScreen = () => {
               </button>
 
               <button
-                onClick={() => setStep("email")}
+                onClick={() => { setStep("email"); clearError(); }}
                 disabled={loading}
                 className="w-full flex items-center justify-center gap-2.5 bg-muted/60 rounded-xl py-3 text-[15px] font-medium text-foreground transition-opacity disabled:opacity-50"
               >
@@ -175,7 +193,7 @@ const LoginScreen = () => {
                 disabled={loading}
                 className="w-full text-center text-sm text-muted-foreground/60 italic py-2 transition-opacity disabled:opacity-50"
               >
-                Entra senza account
+                Continua come ospite
               </button>
             </div>
           )}
@@ -185,7 +203,7 @@ const LoginScreen = () => {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); clearError(); }}
                 placeholder="la tua email"
                 autoFocus
                 className="w-full bg-transparent border-b border-trust-blue/40 text-foreground text-[15px] py-2 focus:outline-none focus:border-trust-blue placeholder:text-muted-foreground/50"
@@ -199,7 +217,7 @@ const LoginScreen = () => {
                 {loading ? "Invio in corso..." : "Invia codice"}
               </button>
               <button
-                onClick={() => setStep("choose")}
+                onClick={() => { setStep("choose"); clearError(); }}
                 className="text-xs text-muted-foreground/60 italic"
               >
                 ← Indietro
@@ -217,7 +235,7 @@ const LoginScreen = () => {
                 inputMode="numeric"
                 maxLength={6}
                 value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                onChange={(e) => { setOtp(e.target.value.replace(/\D/g, "")); clearError(); }}
                 placeholder="000000"
                 autoFocus
                 className="w-full text-center tracking-[0.5em] bg-transparent border-b-2 border-trust-blue/40 text-foreground text-xl font-mono py-2 focus:outline-none focus:border-trust-blue placeholder:text-muted-foreground/30"
@@ -231,7 +249,7 @@ const LoginScreen = () => {
                 {loading ? "Verifico..." : "Conferma"}
               </button>
               <button
-                onClick={() => { setStep("email"); setOtp(""); }}
+                onClick={() => { setStep("email"); setOtp(""); clearError(); }}
                 className="text-xs text-muted-foreground/60 italic"
               >
                 ← Cambia email
