@@ -71,6 +71,9 @@ const Index = () => {
   const [onboardingStep, setOnboardingStep] = useState(0);
   const [appPhase, setAppPhase] = useState<"splash" | "onboarding" | "conversation">("splash");
   const [isNewSession, setIsNewSession] = useState(true);
+  // Whether the user should skip login (returning user with profile, or fresh auth in this session)
+  const [skipLogin, setSkipLogin] = useState(false);
+  const [checkingProfile, setCheckingProfile] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { user, loading, isReady } = useIntusAuth();
   const isGuest = !!user?.is_anonymous;
