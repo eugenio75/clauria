@@ -101,7 +101,7 @@ const Index = () => {
       if (content.includes("Non la leggerà nessuno")) {
         setLetterModeOffered(true);
       }
-    }, 800 + Math.random() * 600);
+    }, 300);
   }, []);
 
   // When user upgrades from anonymous, clear the anon counter
