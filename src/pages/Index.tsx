@@ -319,6 +319,10 @@ const Index = () => {
     return <LoginScreen />;
   }
 
+  if (showWelcome) {
+    return <WelcomeScreen onComplete={handleWelcomeComplete} />;
+  }
+
   return (
     <div className="flex flex-col h-[100dvh] bg-parchment max-w-[600px] mx-auto overflow-x-hidden">
       {/* Header */}
