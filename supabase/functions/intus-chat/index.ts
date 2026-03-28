@@ -109,7 +109,8 @@ The user is reaching out in the evening or night hours.
 // ─── System Prompt Builder ─────────────────────────────────
 function buildSystemPrompt(
   ctx: Record<string, unknown>,
-  localHour?: number
+  localHour?: number,
+  isNewSession?: boolean
 ): string {
   const liturgical = getLiturgicalSeason(new Date());
   const liturgicalNote = liturgical.note
@@ -369,7 +370,7 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const systemPrompt = buildSystemPrompt(userContext || {}, localHour);
+    const systemPrompt = buildSystemPrompt(userContext || {}, localHour, isNewSession);
 
     // If this is the first response after onboarding, add special instructions
     let finalSystemPrompt = systemPrompt;
