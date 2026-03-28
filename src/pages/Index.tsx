@@ -308,7 +308,7 @@ const Index = () => {
 
 
   if (showSplash) {
-    return <SplashScreen onComplete={handleSplashComplete} />;
+    return <SplashScreen onComplete={handleSplashComplete} fadingOut={splashFadingOut} />;
   }
 
   // Show login screen if not authenticated

@@ -20,13 +20,20 @@ const WelcomeScreen = ({ onComplete }: WelcomeScreenProps) => {
   const [showCta, setShowCta] = useState(false);
 
   useEffect(() => {
-    if (visibleLines < LINES.length) {
-      const { fadeMs, waitMs } = LINES[visibleLines];
-      const timer = setTimeout(() => setVisibleLines((v) => v + 1), fadeMs + waitMs);
+    if (visibleLines === 0) {
+      // Initial delay before first sentence starts — ensures splash has fully faded
+      const timer = setTimeout(() => setVisibleLines(1), 600);
       return () => clearTimeout(timer);
-    } else {
-      const timer = setTimeout(() => setShowCta(true), 500);
-      return () => clearTimeout(timer);
+    }
+    if (visibleLines > 0 && visibleLines <= LINES.length) {
+      if (visibleLines < LINES.length) {
+        const { fadeMs, waitMs } = LINES[visibleLines - 1];
+        const timer = setTimeout(() => setVisibleLines((v) => v + 1), fadeMs + waitMs);
+        return () => clearTimeout(timer);
+      } else {
+        const timer = setTimeout(() => setShowCta(true), 500);
+        return () => clearTimeout(timer);
+      }
     }
   }, [visibleLines]);
 
