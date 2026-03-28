@@ -382,7 +382,7 @@ const Index = () => {
   }
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-parchment max-w-[600px] mx-auto">
+    <div className="flex flex-col h-[100dvh] bg-parchment max-w-[600px] mx-auto overflow-x-hidden">
       {/* Header */}
       <header className="flex items-center justify-between px-5 py-4 pt-safe">
         <h1 className="font-display text-xl tracking-wide text-foreground">INTUS</h1>
@@ -395,7 +395,7 @@ const Index = () => {
       </header>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 space-y-4 pb-4">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden px-4 space-y-4 pb-4 scrollbar-hide">
         {messages.map((msg) => (
           <div key={msg.id}>
             <MessageBubble content={msg.content} sender={msg.sender} />
