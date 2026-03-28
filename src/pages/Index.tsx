@@ -304,6 +304,13 @@ const Index = () => {
     }, 500);
   };
 
+  // Sign out anonymous sessions so LoginScreen works cleanly
+  useEffect(() => {
+    if (!showSplash && !loading && user?.is_anonymous) {
+      supabase.auth.signOut();
+    }
+  }, [showSplash, loading, user]);
+
   if (showSplash) {
     return <SplashScreen onComplete={handleSplashComplete} />;
   }
