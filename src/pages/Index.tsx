@@ -39,7 +39,7 @@ Puoi parlarmi di quello che pesa, di quello che non riesci a decidere, di quello
 
 Sono qui quando hai bisogno di capire cosa senti davvero — o quale sia la scelta giusta da prendere. Ti aiuterò a ragionare, a vedere più chiaramente, a trovare la tua strada. La decisione resterà sempre tua.
 
-Non sono un medico, non sono un giudice. Sono qualcuno con cui puoi parlare — sempre, anche di notte, anche delle cose che non dici a nessuno.
+Sono qualcuno con cui puoi parlare — sempre, anche di notte, anche delle cose che non dici a nessuno.
 
 Prima di cominciare, aiutami a conoscerti un po'.`;
 
