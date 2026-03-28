@@ -39,6 +39,18 @@ function getEmailHtml(code: string): string {
 </html>`;
 }
 
+function extractEmailAddress(value?: string | null): string | null {
+  if (!value) return null;
+
+  const angleMatch = value.match(/<([^>]+)>/);
+  if (angleMatch?.[1]?.includes("@")) {
+    return angleMatch[1].trim().toLowerCase();
+  }
+
+  const plain = value.trim().toLowerCase();
+  return plain.includes("@") ? plain : null;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -78,27 +90,46 @@ serve(async (req) => {
     if (insertError) throw insertError;
 
     // Send via SMTP
+    const smtpFrom = Deno.env.get("SMTP_FROM") || "INTUS <noreply@tenks.co>";
+    const smtpUsernameRaw = (Deno.env.get("SMTP_USERNAME") || "").trim();
+    const smtpUsername = smtpUsernameRaw.includes("@")
+      ? smtpUsernameRaw.toLowerCase()
+      : extractEmailAddress(smtpFrom) || smtpUsernameRaw;
+    const smtpPassword = Deno.env.get("SMTP_PASSWORD") || "";
+
+    if (!smtpUsername || !smtpPassword) {
+      throw new Error("Configurazione email incompleta. Verifica SMTP_USERNAME e SMTP_PASSWORD.");
+    }
+
     const client = new SMTPClient({
       connection: {
         hostname: Deno.env.get("SMTP_HOST") || "smtp.hostinger.com",
         port: parseInt(Deno.env.get("SMTP_PORT") || "465"),
         tls: true,
         auth: {
-          username: Deno.env.get("SMTP_USERNAME") || "",
-          password: Deno.env.get("SMTP_PASSWORD") || "",
+          username: smtpUsername,
+          password: smtpPassword,
         },
       },
     });
 
-    await client.send({
-      from: Deno.env.get("SMTP_FROM") || "INTUS <noreply@tenks.co>",
-      to: email.trim(),
-      subject: "INTUS — Il tuo codice di accesso",
-      content: "auto",
-      html: getEmailHtml(code),
-    });
-
-    await client.close();
+    try {
+      await client.send({
+        from: smtpFrom,
+        to: email.trim(),
+        subject: "INTUS — Il tuo codice di accesso",
+        content: "auto",
+        html: getEmailHtml(code),
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes("535") || message.toLowerCase().includes("authentication failed")) {
+        throw new Error("Autenticazione SMTP fallita. Verifica che l'utente SMTP sia l'indirizzo email completo della casella e che la password sia corretta.");
+      }
+      throw error;
+    } finally {
+      await client.close();
+    }
 
     console.log(`OTP sent to ${email}`);
 
