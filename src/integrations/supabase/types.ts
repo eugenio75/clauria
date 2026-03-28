@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           current_emotional_theme: string | null
           id: string
+          improvement_detected: boolean | null
           last_session_at: string | null
           ongoing_situation: string | null
           pending_decisions: Json | null
@@ -25,12 +26,14 @@ export type Database = {
           recurring_theme_count: number | null
           session_count: number | null
           session_tone: string | null
+          tone_history: Json | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
           current_emotional_theme?: string | null
           id?: string
+          improvement_detected?: boolean | null
           last_session_at?: string | null
           ongoing_situation?: string | null
           pending_decisions?: Json | null
@@ -38,12 +41,14 @@ export type Database = {
           recurring_theme_count?: number | null
           session_count?: number | null
           session_tone?: string | null
+          tone_history?: Json | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
           current_emotional_theme?: string | null
           id?: string
+          improvement_detected?: boolean | null
           last_session_at?: string | null
           ongoing_situation?: string | null
           pending_decisions?: Json | null
@@ -51,6 +56,7 @@ export type Database = {
           recurring_theme_count?: number | null
           session_count?: number | null
           session_tone?: string | null
+          tone_history?: Json | null
           updated_at?: string | null
           user_id?: string
         }

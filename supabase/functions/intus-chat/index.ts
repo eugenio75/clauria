@@ -22,6 +22,8 @@ USER CONTEXT:
 - Pending decisions: ${JSON.stringify(ctx.pending_decisions || [])}
 - Session count: ${ctx.session_count || 1}
 - Last session tone: ${ctx.session_tone || "unknown"}
+- Improvement detected (3+ consecutive improving sessions): ${ctx.improvement_detected || false}
+- Tone history (last 5): ${JSON.stringify(ctx.tone_history || [])}
 
 YOUR CORE VALUES (embody silently, never name them):
 - Mercy over judgment — never condemn, always welcome
@@ -174,16 +176,48 @@ serve(async (req) => {
       .replace("[CRISIS_LEVEL_3]", "")
       .trim();
 
-    // Save context update to Supabase
+    // Save context update to Supabase with server-side theme & tone tracking
     if (contextUpdate && userId) {
       const supabase = createClient(
         Deno.env.get("SUPABASE_URL")!,
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
       );
+
+      // Fetch previous context for comparison
+      const { data: prevCtx } = await supabase
+        .from("intus_context")
+        .select("current_emotional_theme, recurring_theme_count, tone_history")
+        .eq("user_id", userId)
+        .single();
+
+      // --- 1. recurring_theme_count: server-side comparison ---
+      let recurringCount = 0;
+      if (prevCtx && contextUpdate.current_emotional_theme) {
+        const prev = (prevCtx.current_emotional_theme || "").toLowerCase().trim();
+        const curr = contextUpdate.current_emotional_theme.toLowerCase().trim();
+        // Simple keyword overlap check for semantic similarity
+        const prevWords = new Set(prev.split(/\s+/).filter((w: string) => w.length > 3));
+        const currWords = curr.split(/\s+/).filter((w: string) => w.length > 3);
+        const overlap = currWords.filter((w: string) => prevWords.has(w)).length;
+        const isSimilar = prev === curr || (prevWords.size > 0 && overlap / Math.max(prevWords.size, currWords.length) >= 0.4);
+        recurringCount = isSimilar ? (prevCtx.recurring_theme_count || 0) + 1 : 0;
+      }
+
+      // --- 2. tone_history & improvement_detected ---
+      const prevHistory: string[] = Array.isArray(prevCtx?.tone_history) ? prevCtx.tone_history : [];
+      const newTone = contextUpdate.session_tone || "stable";
+      const toneHistory = [...prevHistory, newTone].slice(-5);
+      const last3 = toneHistory.slice(-3);
+      const improvementDetected = last3.length === 3 && last3.every((t: string) => t === "improving");
+
+      // Override AI-provided values with server-computed ones
       await supabase.from("intus_context").upsert(
         {
           user_id: userId,
           ...contextUpdate,
+          recurring_theme_count: recurringCount,
+          tone_history: toneHistory,
+          improvement_detected: improvementDetected,
           updated_at: new Date().toISOString(),
           last_session_at: new Date().toISOString(),
         },
