@@ -12,6 +12,19 @@ const LoginScreen = () => {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const handleGuest = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInAnonymously();
+      if (error) throw error;
+    } catch (err) {
+      console.error(err);
+      toast.error("Qualcosa non ha funzionato. Riprova.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGoogle = async () => {
     setLoading(true);
     try {
