@@ -16,7 +16,7 @@ const MessageBubble = ({ content, sender }: MessageBubbleProps) => {
       className={`flex ${isAI ? "justify-start" : "justify-end"}`}
     >
       <div
-        className={`max-w-[85%] px-5 py-3.5 ${
+        className={`max-w-[85%] box-border px-5 py-3.5 ${
           isAI
             ? "bg-ai-bubble rounded-2xl rounded-tl-sm shadow-sm text-foreground leading-relaxed"
             : "bg-user-bubble rounded-2xl rounded-tr-sm text-foreground"
