@@ -12,6 +12,19 @@ const LoginScreen = () => {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const handleGuest = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInAnonymously();
+      if (error) throw error;
+    } catch (err) {
+      console.error(err);
+      toast.error("Qualcosa non ha funzionato. Riprova.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGoogle = async () => {
     setLoading(true);
     try {
@@ -146,6 +159,23 @@ const LoginScreen = () => {
                 className="w-full flex items-center justify-center gap-2.5 bg-muted/60 rounded-xl py-3 text-[15px] font-medium text-foreground transition-opacity disabled:opacity-50"
               >
                 ✉️ Usa la tua mail
+              </button>
+
+              <div className="relative my-2">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border/40" />
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="bg-ai-bubble px-3 text-xs text-muted-foreground/50">oppure</span>
+                </div>
+              </div>
+
+              <button
+                onClick={handleGuest}
+                disabled={loading}
+                className="w-full text-center text-sm text-muted-foreground/60 italic py-2 transition-opacity disabled:opacity-50"
+              >
+                Entra senza account
               </button>
             </div>
           )}

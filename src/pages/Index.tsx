@@ -71,7 +71,8 @@ const Index = () => {
   const [appPhase, setAppPhase] = useState<"splash" | "onboarding" | "conversation">("splash");
   const scrollRef = useRef<HTMLDivElement>(null);
   const { user, loading } = useIntusAuth();
-  const isAuthenticated = !!user && !user.is_anonymous;
+  const isGuest = !!user?.is_anonymous;
+  const isAuthenticated = !!user;
   const { loadContext, saveProfile, resetContext } = useIntusContext();
 
   const scrollToBottom = useCallback(() => {
@@ -295,12 +296,6 @@ const Index = () => {
     setShowWelcome(true);
   };
 
-  // Sign out anonymous sessions so LoginScreen works cleanly
-  useEffect(() => {
-    if (!showSplash && !loading && user?.is_anonymous) {
-      supabase.auth.signOut();
-    }
-  }, [showSplash, loading, user]);
 
   if (showSplash) {
     return <SplashScreen onComplete={handleSplashComplete} />;
