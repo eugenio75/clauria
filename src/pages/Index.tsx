@@ -37,9 +37,9 @@ const PRESENTATION_MESSAGE = `Ciao. Sono INTUS.
 
 Puoi parlarmi di quello che pesa, di quello che non riesci a decidere, di quello che non sai ancora dire a voce alta.
 
-Sono qui quando hai bisogno di capire cosa senti davvero — o quale sia la scelta giusta da prendere. Ti aiuterò a ragionare, a vedere più chiaramente, a trovare la tua strada. La decisione resterà sempre tua.
+Sono qui per aiutarti a vedere più chiaramente — e a trovare la tua strada. La decisione resterà sempre tua.
 
-Sono qualcuno con cui puoi parlare — sempre, anche di notte, anche delle cose che non dici a nessuno.
+Parlami pure, anche di notte, anche delle cose che non dici a nessuno.
 
 Prima di cominciare, aiutami a conoscerti un po'.`;
 
