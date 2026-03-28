@@ -6,51 +6,51 @@
 
 @layer base {
   :root {
-    --background: 200 25% 94%;
+    --background: 40 33% 94%;
     --foreground: 0 0% 10%;
 
     --card: 0 0% 100%;
     --card-foreground: 0 0% 10%;
 
-    --popover: 36 33% 93%;
+    --popover: 40 33% 93%;
     --popover-foreground: 0 0% 10%;
 
     --primary: 209 52% 36%;
-    --primary-foreground: 36 33% 93%;
+    --primary-foreground: 40 33% 94%;
 
     --secondary: 120 13% 49%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 200 18% 88%;
-    --muted-foreground: 200 10% 45%;
+    --muted: 40 18% 88%;
+    --muted-foreground: 40 10% 45%;
 
     --accent: 209 52% 36%;
-    --accent-foreground: 36 33% 93%;
+    --accent-foreground: 40 33% 94%;
 
     --destructive: 0 67% 33%;
-    --destructive-foreground: 36 33% 93%;
+    --destructive-foreground: 40 33% 94%;
 
-    --border: 200 15% 82%;
-    --input: 200 15% 82%;
+    --border: 40 15% 82%;
+    --input: 40 15% 82%;
     --ring: 209 52% 36%;
 
     --radius: 1rem;
 
     /* INTUS custom tokens */
-    --parchment: 200 25% 94%;
+    --parchment: 40 33% 94%;
     --ai-bubble: 0 0% 100%;
     --user-bubble: 207 48% 93%;
     --trust-blue: 209 52% 36%;
     --sage-green: 120 13% 49%;
     --crisis-red: 0 67% 33%;
 
-    --sidebar-background: 36 33% 93%;
+    --sidebar-background: 40 33% 93%;
     --sidebar-foreground: 0 0% 10%;
     --sidebar-primary: 209 52% 36%;
-    --sidebar-primary-foreground: 36 33% 93%;
-    --sidebar-accent: 36 20% 88%;
+    --sidebar-primary-foreground: 40 33% 94%;
+    --sidebar-accent: 40 20% 88%;
     --sidebar-accent-foreground: 0 0% 10%;
-    --sidebar-border: 36 15% 82%;
+    --sidebar-border: 40 15% 82%;
     --sidebar-ring: 209 52% 36%;
   }
 }
