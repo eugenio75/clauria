@@ -8,6 +8,12 @@ import SettingsPanel from "../components/SettingsPanel";
 import CrisisCard from "../components/CrisisCard";
 import SilenceMode from "../components/SilenceMode";
 import SplashScreen from "../components/SplashScreen";
+import UnsentLetter from "../components/UnsentLetter";
+import EmailUpgrade from "../components/EmailUpgrade";
+import { useIntusAuth } from "../hooks/useIntusAuth";
+import { useIntusContext } from "../hooks/useIntusContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface Message {
   id: string;
@@ -24,7 +30,6 @@ interface UserProfile {
   onboardingComplete: boolean;
 }
 
-// Onboarding steps
 const ONBOARDING_STEPS = [
   {
     aiMessage: "Ciao. Sono qui per te.\nPrima di cominciare, aiutami a conoscerti un po'.\nCome ti chiami?",
@@ -44,21 +49,16 @@ const ONBOARDING_STEPS = [
   },
 ];
 
-// Mock AI responses for demo (will be replaced by Claude API)
-const MOCK_RESPONSES = [
-  "Capisco. Quello che senti è importante, e non devi avere fretta di risolverlo. Cosa ti viene in mente quando ci pensi?",
-  "Grazie per aver condiviso questo. A volte le cose più pesanti sono quelle che non troviamo le parole per dire. Vuoi provare a dirlo in un altro modo?",
-  "Mi sembra che stai portando molto. C'è qualcuno nella tua vita con cui potresti condividere anche solo una parte di questo?",
-  "Quello che dici ha molto senso. Non sempre le risposte arrivano subito — a volte basta stare con la domanda un po' più a lungo.",
-  "Ti sento. E il fatto che tu sia qui a parlarne dice qualcosa di importante su di te.",
-];
-
 const Index = () => {
   const [showSplash, setShowSplash] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [silenceMode, setSilenceMode] = useState(false);
+  const [silenceModeOffered, setSilenceModeOffered] = useState(false);
+  const [letterMode, setLetterMode] = useState(false);
+  const [letterModeOffered, setLetterModeOffered] = useState(false);
+  const [showEmailUpgrade, setShowEmailUpgrade] = useState(false);
   const [profile, setProfile] = useState<UserProfile>({
     name: "",
     ageRange: "",
@@ -69,7 +69,8 @@ const Index = () => {
   const [onboardingStep, setOnboardingStep] = useState(0);
   const [appPhase, setAppPhase] = useState<"splash" | "onboarding" | "conversation">("splash");
   const scrollRef = useRef<HTMLDivElement>(null);
-  const mockResponseIndex = useRef(0);
+  const { user } = useIntusAuth();
+  const { loadContext, saveProfile, resetContext } = useIntusContext();
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
@@ -77,69 +78,160 @@ const Index = () => {
     }, 50);
   }, []);
 
-  // After splash, check if onboarding is complete
-  const handleSplashComplete = useCallback(() => {
-    setShowSplash(false);
-    const saved = localStorage.getItem("intus_profile");
-    if (saved) {
-      const parsed = JSON.parse(saved) as UserProfile;
-      if (parsed.onboardingComplete) {
-        setProfile(parsed);
-        setAppPhase("conversation");
-        // Welcome back message
-        const welcomeMsg = parsed.name
-          ? `Ciao ${parsed.name}. Sono qui. Di cosa hai bisogno oggi?`
-          : "Ciao. Sono qui. Di cosa hai bisogno oggi?";
-        setTimeout(() => {
-          addAIMessage(welcomeMsg);
-        }, 500);
-        return;
-      }
-    }
-    setAppPhase("onboarding");
-    // Start onboarding
-    setTimeout(() => {
-      addAIMessage(ONBOARDING_STEPS[0].aiMessage!);
-    }, 500);
-  }, []);
-
-  const addAIMessage = (content: string) => {
+  const addAIMessage = useCallback((content: string, crisis?: boolean) => {
     setIsTyping(true);
     setTimeout(() => {
       setIsTyping(false);
       setMessages((prev) => [
         ...prev,
-        { id: Date.now().toString(), content, sender: "ai" },
+        { id: Date.now().toString(), content, sender: "ai", crisis },
       ]);
+
+      // Detect special moment triggers
+      if (content.includes("fermarci un momento in silenzio")) {
+        setSilenceModeOffered(true);
+      }
+      if (content.includes("Non la leggerà nessuno")) {
+        setLetterModeOffered(true);
+      }
     }, 800 + Math.random() * 600);
-  };
+  }, []);
+
+  // After splash, check if user has a profile in DB
+  const handleSplashComplete = useCallback(async () => {
+    setShowSplash(false);
+
+    if (!user) {
+      // Auth still loading, start onboarding from local
+      const saved = localStorage.getItem("intus_profile");
+      if (saved) {
+        const parsed = JSON.parse(saved) as UserProfile;
+        if (parsed.onboardingComplete) {
+          setProfile(parsed);
+          setAppPhase("conversation");
+          const welcomeMsg = parsed.name
+            ? `Ciao ${parsed.name}. Sono qui. Di cosa hai bisogno oggi?`
+            : "Ciao. Sono qui. Di cosa hai bisogno oggi?";
+          setTimeout(() => addAIMessage(welcomeMsg), 500);
+          return;
+        }
+      }
+      setAppPhase("onboarding");
+      setTimeout(() => addAIMessage(ONBOARDING_STEPS[0].aiMessage!), 500);
+      return;
+    }
+
+    // Try loading from DB
+    try {
+      const ctx = await loadContext(user.id);
+      if (ctx.user_name && ctx.session_count && ctx.session_count > 0) {
+        setProfile({
+          name: ctx.user_name || "",
+          ageRange: ctx.age_range || "",
+          lifeContext: ctx.life_context || "",
+          emotionalEntry: "",
+          onboardingComplete: true,
+        });
+        setAppPhase("conversation");
+
+        // Contextual re-entry for returning users
+        let welcomeMsg: string;
+        if (ctx.session_count > 1 && ctx.ongoing_situation) {
+          welcomeMsg = `Bentornato/a ${ctx.user_name}. L'ultima volta mi parlavi di ${ctx.ongoing_situation}. Come è andata?`;
+        } else {
+          welcomeMsg = `Ciao ${ctx.user_name}. Sono qui. Di cosa hai bisogno oggi?`;
+        }
+        setTimeout(() => addAIMessage(welcomeMsg), 500);
+        return;
+      }
+    } catch {
+      // No profile in DB
+    }
+
+    setAppPhase("onboarding");
+    setTimeout(() => addAIMessage(ONBOARDING_STEPS[0].aiMessage!), 500);
+  }, [user, loadContext, addAIMessage]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping, scrollToBottom]);
 
+  const sendToAI = async (allMessages: Message[]) => {
+    if (!user) return;
+
+    setIsTyping(true);
+    try {
+      const ctx = await loadContext(user.id);
+
+      const { data, error } = await supabase.functions.invoke("intus-chat", {
+        body: {
+          messages: allMessages
+            .filter((m) => m.sender === "ai" || m.sender === "user")
+            .slice(-10)
+            .map((m) => ({
+              role: m.sender === "ai" ? "assistant" : "user",
+              content: m.content,
+            })),
+          userContext: ctx,
+          userId: user.id,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.isCrisisLevel3) {
+        setMessages((prev) => [
+          ...prev,
+          { id: Date.now().toString(), content: data.text, sender: "ai", crisis: true },
+        ]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { id: Date.now().toString(), content: data.text, sender: "ai" },
+        ]);
+      }
+
+      // Detect special moments
+      if (data.text.includes("fermarci un momento in silenzio")) {
+        setSilenceModeOffered(true);
+      }
+      if (data.text.includes("Non la leggerà nessuno")) {
+        setLetterModeOffered(true);
+      }
+    } catch (err) {
+      console.error("AI error:", err);
+      const errorMsg = err instanceof Error && err.message.includes("429")
+        ? "Ho bisogno di un momento. Riprova tra poco."
+        : "Sono qui. Qualcosa non ha funzionato — puoi riprovare?";
+      setMessages((prev) => [
+        ...prev,
+        { id: Date.now().toString(), content: errorMsg, sender: "ai" },
+      ]);
+      if (err instanceof Error && err.message.includes("402")) {
+        toast.error("Crediti AI esauriti. Aggiungi fondi nelle impostazioni del workspace.");
+      }
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
   const handleSend = (text: string) => {
     const userMsg: Message = { id: Date.now().toString(), content: text, sender: "user" };
-    setMessages((prev) => [...prev, userMsg]);
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
+
+    // Clear offered modes on new message
+    setSilenceModeOffered(false);
+    setLetterModeOffered(false);
 
     if (appPhase === "onboarding") {
       handleOnboardingResponse(text);
     } else {
-      // Mock conversation response
-      setIsTyping(true);
-      setTimeout(() => {
-        setIsTyping(false);
-        const response = MOCK_RESPONSES[mockResponseIndex.current % MOCK_RESPONSES.length];
-        mockResponseIndex.current++;
-        setMessages((prev) => [
-          ...prev,
-          { id: (Date.now() + 1).toString(), content: response, sender: "ai" },
-        ]);
-      }, 1000 + Math.random() * 1000);
+      sendToAI(newMessages);
     }
   };
 
-  const handleOnboardingResponse = (text: string) => {
+  const handleOnboardingResponse = async (text: string) => {
     const step = ONBOARDING_STEPS[onboardingStep];
     const newProfile = { ...profile, [step.field]: text };
     setProfile(newProfile);
@@ -152,17 +244,45 @@ const Index = () => {
       const msg = next.aiMessageFn ? next.aiMessageFn(newProfile.name) : next.aiMessage!;
       addAIMessage(msg);
     } else {
-      // Onboarding complete
+      // Onboarding complete — save to DB
       const finalProfile = { ...newProfile, onboardingComplete: true };
       setProfile(finalProfile);
       localStorage.setItem("intus_profile", JSON.stringify(finalProfile));
+
+      if (user) {
+        try {
+          await saveProfile(user.id, {
+            name: finalProfile.name,
+            ageRange: finalProfile.ageRange,
+            lifeContext: finalProfile.lifeContext,
+          });
+        } catch (err) {
+          console.error("Failed to save profile:", err);
+        }
+      }
+
       setAppPhase("conversation");
-      addAIMessage("Grazie. Sono qui. Dimmi pure.");
+
+      // Show email upgrade prompt
+      const isAnonymous = user?.is_anonymous;
+      if (isAnonymous) {
+        addAIMessage("Grazie. Sono qui. Dimmi pure.");
+        setTimeout(() => setShowEmailUpgrade(true), 2000);
+      } else {
+        addAIMessage("Grazie. Sono qui. Dimmi pure.");
+      }
     }
   };
 
-  const handleResetMemory = () => {
+  const handleResetMemory = async () => {
     localStorage.removeItem("intus_profile");
+    if (user) {
+      try {
+        await resetContext(user.id);
+      } catch (err) {
+        console.error("Failed to reset context:", err);
+      }
+    }
     setProfile({ name: "", ageRange: "", lifeContext: "", emotionalEntry: "", onboardingComplete: false });
     setMessages([]);
     setOnboardingStep(0);
@@ -198,6 +318,38 @@ const Index = () => {
           </div>
         ))}
         {isTyping && <TypingIndicator />}
+
+        {/* Email upgrade prompt */}
+        {showEmailUpgrade && (
+          <EmailUpgrade
+            onComplete={() => setShowEmailUpgrade(false)}
+            onSkip={() => setShowEmailUpgrade(false)}
+          />
+        )}
+
+        {/* Silence mode offer */}
+        {silenceModeOffered && !silenceMode && (
+          <div className="flex justify-center mt-2 mb-4">
+            <button
+              onClick={() => { setSilenceMode(true); setSilenceModeOffered(false); }}
+              className="text-sm text-trust-blue/60 italic underline-offset-2 underline"
+            >
+              Sì, mi fermo un momento
+            </button>
+          </div>
+        )}
+
+        {/* Unsent letter offer */}
+        {letterModeOffered && !letterMode && (
+          <div className="flex justify-center mt-2 mb-4">
+            <button
+              onClick={() => { setLetterMode(true); setLetterModeOffered(false); }}
+              className="text-sm text-trust-blue/60 italic underline-offset-2 underline"
+            >
+              Sì, voglio scrivere
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Input */}
@@ -212,6 +364,9 @@ const Index = () => {
           const updated = { ...profile, name };
           setProfile(updated);
           localStorage.setItem("intus_profile", JSON.stringify(updated));
+          if (user) {
+            supabase.from("intus_profiles").update({ user_name: name }).eq("id", user.id);
+          }
         }}
         onResetMemory={handleResetMemory}
       />
@@ -219,6 +374,11 @@ const Index = () => {
       {/* Silence Mode */}
       <AnimatePresence>
         {silenceMode && <SilenceMode onReturn={() => setSilenceMode(false)} />}
+      </AnimatePresence>
+
+      {/* Unsent Letter */}
+      <AnimatePresence>
+        {letterMode && <UnsentLetter onClose={() => setLetterMode(false)} />}
       </AnimatePresence>
     </div>
   );
