@@ -459,6 +459,7 @@ const Index = () => {
           }
         }}
         onResetMemory={handleResetMemory}
+        isAuthenticated={!isAnonymous}
       />
 
       {/* Silence Mode */}
