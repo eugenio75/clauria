@@ -349,7 +349,8 @@ const Index = () => {
     setProfile({ name: "", ageRange: "", lifeContext: "", emotionalEntry: "", onboardingComplete: false });
     setMessages([]);
     setOnboardingStep(0);
-    hasStartedRef.current = false;
+    hasCheckedRef.current = false;
+    setSkipLogin(false);
     setShowWelcome(true);
   };
 
