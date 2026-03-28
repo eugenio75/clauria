@@ -33,9 +33,19 @@ interface UserProfile {
 const ANON_MSG_LIMIT = 5;
 const ANON_MSG_KEY = "intus_anon_msg_count";
 
+const PRESENTATION_MESSAGE = `Ciao. Sono INTUS.
+
+Puoi parlarmi di quello che pesa, di quello che non riesci a decidere, di quello che non sai ancora dire a voce alta.
+
+Sono qui quando hai bisogno di capire cosa senti davvero — o quale sia la scelta giusta da prendere. Ti aiuterò a ragionare, a vedere più chiaramente, a trovare la tua strada. La decisione resterà sempre tua.
+
+Non sono un medico, non sono un giudice. Sono qualcuno con cui puoi parlare — sempre, anche di notte, anche delle cose che non dici a nessuno.
+
+Prima di cominciare, aiutami a conoscerti un po'.`;
+
 const ONBOARDING_STEPS = [
   {
-    aiMessage: "Ciao. Sono qui per te.\nPrima di cominciare, aiutami a conoscerti un po'.\nCome ti chiami?",
+    aiMessage: "Come ti chiami?",
     field: "name" as const,
   },
   {
@@ -131,7 +141,10 @@ const Index = () => {
         }
       }
       setAppPhase("onboarding");
-      setTimeout(() => addAIMessage(ONBOARDING_STEPS[0].aiMessage!), 500);
+      setTimeout(() => {
+        addAIMessage(PRESENTATION_MESSAGE);
+        setTimeout(() => addAIMessage(ONBOARDING_STEPS[0].aiMessage!), 1500);
+      }, 500);
       return;
     }
 
@@ -164,7 +177,10 @@ const Index = () => {
     }
 
     setAppPhase("onboarding");
-    setTimeout(() => addAIMessage(ONBOARDING_STEPS[0].aiMessage!), 500);
+    setTimeout(() => {
+      addAIMessage(PRESENTATION_MESSAGE);
+      setTimeout(() => addAIMessage(ONBOARDING_STEPS[0].aiMessage!), 1500);
+    }, 500);
   }, [user, loadContext, addAIMessage]);
 
   useEffect(() => {
