@@ -56,7 +56,7 @@ const WelcomeScreen = ({ onComplete }: WelcomeScreenProps) => {
 
         {LINES.map((line, i) => (
           <AnimatePresence key={i}>
-            {i < visibleLines && (
+            {i + 1 <= visibleLines && (
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
