@@ -362,7 +362,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, userContext, userId, localHour, onboardingData } = await req.json();
+    const { messages, userContext, userId, localHour, onboardingData, isNewSession } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
