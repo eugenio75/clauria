@@ -353,7 +353,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, userContext, userId, localHour } = await req.json();
+    const { messages, userContext, userId, localHour, onboardingData } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -361,6 +361,40 @@ serve(async (req) => {
     }
 
     const systemPrompt = buildSystemPrompt(userContext || {}, localHour);
+
+    // If this is the first response after onboarding, add special instructions
+    let finalSystemPrompt = systemPrompt;
+    if (onboardingData?.isFirstResponseAfterOnboarding) {
+      finalSystemPrompt += `
+
+FIRST RESPONSE AFTER ONBOARDING — SPECIAL INSTRUCTIONS:
+This is the very first real message after onboarding.
+You know: name="${onboardingData.name}", age range="${onboardingData.ageRange}", life context="${onboardingData.lifeContext}", and emotional entry state="${onboardingData.emotionalEntry}".
+Do NOT say "Grazie. Sono qui. Dimmi pure."
+Instead, craft a warm, specific opening based on what was shared:
+
+IF emotional_entry_state suggests the user is doing well / positive:
+→ Acknowledge the good moment, then open a door:
+  "Che bello sentirti così, [name]. A volte vale la pena fermarsi anche quando le cose vanno — capire cosa funziona, cosa si vuole davvero. C'è qualcosa su cui ti stai interrogando in questo periodo?"
+
+IF emotional_entry_state suggests heaviness, difficulty, struggle:
+→ Acknowledge what they carried into the conversation:
+  "[Name], quello che mi hai detto mi è rimasto. Possiamo guardarlo insieme da dove vuoi — una situazione specifica, una sensazione, una persona. Dimmi."
+
+IF emotional_entry_state suggests confusion, not knowing how they feel:
+→ Normalize the uncertainty, open gently:
+  "[Name], non sapere come si sta è già dire molto. A volte il caos ha bisogno solo di uno spazio per posarsi. Cominciamo da quello che hai più vicino — anche la cosa più piccola va bene."
+
+IF emotional_entry_state suggests anger, frustration:
+→ Welcome the anger, invite the story:
+  "[Name], la frustrazione che sento ha senso. Non ti chiedo di calmarla — ti chiedo di raccontarmela. Cosa è successo?"
+
+IF emotional_entry_state suggests loneliness, isolation:
+→ Name the loneliness directly with warmth:
+  "[Name], la solitudine che sento nelle tue parole è reale. Sono qui — e non ho fretta. Raccontami."
+
+IMPORTANT: Never use a generic closing. Always reference something specific from the onboarding. The user must feel that INTUS was listening — not running a script.`;
+    }
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
