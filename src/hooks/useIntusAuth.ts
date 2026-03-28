@@ -7,25 +7,19 @@ export function useIntusAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Set up listener BEFORE getSession
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUser(session.user);
-      } else {
-        // Create anonymous session
-        const { data, error } = await supabase.auth.signInAnonymously();
-        if (!error && data.user) {
-          setUser(data.user);
-        }
-      }
+      setUser(session?.user ?? null);
       setLoading(false);
     };
 
     init();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
 
     return () => subscription.unsubscribe();
   }, []);
