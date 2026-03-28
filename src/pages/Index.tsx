@@ -153,14 +153,58 @@ const Index = () => {
     }, 400);
   }, []);
 
-  // When splash is done and user is authenticated, start the flow
-  const hasStartedRef = useRef(false);
+  // When splash is done and user is authenticated, check if they have a profile (returning user)
+  // Only auto-skip login for returning users with completed profiles
+  const hasCheckedRef = useRef(false);
   useEffect(() => {
-    if (!showSplash && isAuthenticated && !hasStartedRef.current) {
-      hasStartedRef.current = true;
-      startConversation();
+    if (!showSplash && isReady && isAuthenticated && !hasCheckedRef.current) {
+      hasCheckedRef.current = true;
+      setCheckingProfile(true);
+      
+      loadContext(user!.id).then((ctx) => {
+        if (ctx.user_name && ctx.session_count && ctx.session_count > 0) {
+          // Returning user with profile — skip login and go straight to conversation
+          setSkipLogin(true);
+          setProfile({
+            name: ctx.user_name || "",
+            ageRange: ctx.age_range || "",
+            lifeContext: ctx.life_context || "",
+            emotionalEntry: "",
+            onboardingComplete: true,
+          });
+          setAppPhase("conversation");
+
+          let welcomeMsg: string;
+          if (ctx.session_count > 1 && ctx.ongoing_situation) {
+            welcomeMsg = `Bentornato/a ${ctx.user_name}. L'ultima volta mi parlavi di ${ctx.ongoing_situation}. Come è andata?`;
+          } else {
+            welcomeMsg = `Ciao ${ctx.user_name}. Sono qui. Di cosa hai bisogno oggi?`;
+          }
+          setTimeout(() => addAIMessage(welcomeMsg), 500);
+        }
+        // If no profile: DON'T skip login. User must choose how to proceed.
+      }).catch(() => {
+        // No profile — show login screen
+      }).finally(() => {
+        setCheckingProfile(false);
+      });
     }
-  }, [showSplash, isAuthenticated, startConversation]);
+  }, [showSplash, isReady, isAuthenticated, user, loadContext, addAIMessage]);
+
+  // When user actively authenticates (session changes from null to user), mark skipLogin
+  const prevUserRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (isReady && user && !prevUserRef.current) {
+      // User just authenticated in this session — if we haven't checked profile yet, 
+      // we need to let the profile check run. If profile check already ran and didn't skip,
+      // this is a fresh auth action.
+      if (hasCheckedRef.current && !skipLogin && !checkingProfile) {
+        setSkipLogin(true);
+        startConversation();
+      }
+    }
+    prevUserRef.current = user?.id ?? null;
+  }, [isReady, user, skipLogin, checkingProfile, startConversation]);
 
   useEffect(() => {
     scrollToBottom();
