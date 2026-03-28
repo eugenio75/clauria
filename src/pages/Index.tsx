@@ -79,6 +79,7 @@ const Index = () => {
   const [appPhase, setAppPhase] = useState<"splash" | "onboarding" | "conversation">("splash");
   const scrollRef = useRef<HTMLDivElement>(null);
   const { user, loading } = useIntusAuth();
+  const isAuthenticated = !!user && !user.is_anonymous;
   const { loadContext, saveProfile, resetContext } = useIntusContext();
 
   const scrollToBottom = useCallback(() => {
