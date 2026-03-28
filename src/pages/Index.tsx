@@ -313,7 +313,18 @@ const Index = () => {
       }
 
       setAppPhase("conversation");
-      addAIMessage("Grazie. Sono qui. Dimmi pure.");
+
+      // Generate contextual first response via AI
+      const contextualMessages = messages.concat([
+        { id: "sys", content: text, sender: "user" as const },
+      ]);
+      sendToAI(contextualMessages, {
+        isFirstResponseAfterOnboarding: true,
+        name: finalProfile.name,
+        ageRange: finalProfile.ageRange,
+        lifeContext: finalProfile.lifeContext,
+        emotionalEntry: finalProfile.emotionalEntry,
+      });
     }
   };
 
@@ -354,7 +365,8 @@ const Index = () => {
     setAnonMsgCount(0);
     setAppPhase("onboarding");
     setTimeout(() => {
-      addAIMessage(ONBOARDING_STEPS[0].aiMessage!);
+      addAIMessage(PRESENTATION_MESSAGE);
+      setTimeout(() => addAIMessage(ONBOARDING_STEPS[0].aiMessage!), 1500);
     }, 500);
   };
 
