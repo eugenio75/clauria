@@ -195,6 +195,7 @@ const Index = () => {
             })),
           userContext: ctx,
           userId: isAnonymous ? null : user.id,
+          localHour: new Date().getHours(),
         },
       });
 
@@ -402,7 +403,12 @@ const Index = () => {
       </div>
 
       {/* Input */}
-      <ChatInput onSend={handleSend} disabled={isTyping || showAuthGate} />
+      <ChatInput
+        onSend={handleSend}
+        disabled={isTyping || showAuthGate}
+        guestMessageCount={anonMsgCount}
+        isAuthenticated={!isAnonymous}
+      />
 
       {/* Settings */}
       <SettingsPanel
