@@ -9,7 +9,7 @@ import CrisisCard from "../components/CrisisCard";
 import SilenceMode from "../components/SilenceMode";
 import SplashScreen from "../components/SplashScreen";
 import UnsentLetter from "../components/UnsentLetter";
-import AuthGate from "../components/AuthGate";
+import LoginScreen from "../components/LoginScreen";
 import { useIntusAuth } from "../hooks/useIntusAuth";
 import { useIntusContext } from "../hooks/useIntusContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,9 +29,6 @@ interface UserProfile {
   emotionalEntry: string;
   onboardingComplete: boolean;
 }
-
-const ANON_MSG_LIMIT = 5;
-const ANON_MSG_KEY = "intus_anon_msg_count";
 
 const PRESENTATION_MESSAGE = `Ciao. Sono INTUS.
 
@@ -71,10 +68,6 @@ const Index = () => {
   const [silenceModeOffered, setSilenceModeOffered] = useState(false);
   const [letterMode, setLetterMode] = useState(false);
   const [letterModeOffered, setLetterModeOffered] = useState(false);
-  const [showAuthGate, setShowAuthGate] = useState(false);
-  const [anonMsgCount, setAnonMsgCount] = useState(() => {
-    return parseInt(localStorage.getItem(ANON_MSG_KEY) || "0", 10);
-  });
   const [profile, setProfile] = useState<UserProfile>({
     name: "",
     ageRange: "",
@@ -85,10 +78,8 @@ const Index = () => {
   const [onboardingStep, setOnboardingStep] = useState(0);
   const [appPhase, setAppPhase] = useState<"splash" | "onboarding" | "conversation">("splash");
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { user } = useIntusAuth();
+  const { user, loading } = useIntusAuth();
   const { loadContext, saveProfile, resetContext } = useIntusContext();
-
-  const isAnonymous = user?.is_anonymous ?? true;
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
@@ -114,66 +105,34 @@ const Index = () => {
     }, 300);
   }, []);
 
-  // When user upgrades from anonymous, clear the anon counter
-  useEffect(() => {
-    if (user && !user.is_anonymous) {
-      localStorage.removeItem(ANON_MSG_KEY);
-      setAnonMsgCount(0);
-      setShowAuthGate(false);
-    }
-  }, [user]);
-
   const handleSplashComplete = useCallback(async () => {
     setShowSplash(false);
 
-    if (!user) {
-      const saved = localStorage.getItem("intus_profile");
-      if (saved) {
-        const parsed = JSON.parse(saved) as UserProfile;
-        if (parsed.onboardingComplete) {
-          setProfile(parsed);
-          setAppPhase("conversation");
-          const welcomeMsg = parsed.name
-            ? `Ciao ${parsed.name}. Sono qui. Di cosa hai bisogno oggi?`
-            : "Ciao. Sono qui. Di cosa hai bisogno oggi?";
-          setTimeout(() => addAIMessage(welcomeMsg), 500);
-          return;
-        }
-      }
-      setAppPhase("onboarding");
-      setTimeout(() => {
-        addAIMessage(PRESENTATION_MESSAGE);
-        setTimeout(() => addAIMessage(ONBOARDING_STEPS[0].aiMessage!), 1500);
-      }, 500);
-      return;
-    }
+    if (!user) return; // Will show LoginScreen
 
-    // Authenticated non-anonymous user: load from DB
-    if (!user.is_anonymous) {
-      try {
-        const ctx = await loadContext(user.id);
-        if (ctx.user_name && ctx.session_count && ctx.session_count > 0) {
-          setProfile({
-            name: ctx.user_name || "",
-            ageRange: ctx.age_range || "",
-            lifeContext: ctx.life_context || "",
-            emotionalEntry: "",
-            onboardingComplete: true,
-          });
-          setAppPhase("conversation");
+    try {
+      const ctx = await loadContext(user.id);
+      if (ctx.user_name && ctx.session_count && ctx.session_count > 0) {
+        setProfile({
+          name: ctx.user_name || "",
+          ageRange: ctx.age_range || "",
+          lifeContext: ctx.life_context || "",
+          emotionalEntry: "",
+          onboardingComplete: true,
+        });
+        setAppPhase("conversation");
 
-          let welcomeMsg: string;
-          if (ctx.session_count > 1 && ctx.ongoing_situation) {
-            welcomeMsg = `Bentornato/a ${ctx.user_name}. L'ultima volta mi parlavi di ${ctx.ongoing_situation}. Come è andata?`;
-          } else {
-            welcomeMsg = `Ciao ${ctx.user_name}. Sono qui. Di cosa hai bisogno oggi?`;
-          }
-          setTimeout(() => addAIMessage(welcomeMsg), 500);
-          return;
+        let welcomeMsg: string;
+        if (ctx.session_count > 1 && ctx.ongoing_situation) {
+          welcomeMsg = `Bentornato/a ${ctx.user_name}. L'ultima volta mi parlavi di ${ctx.ongoing_situation}. Come è andata?`;
+        } else {
+          welcomeMsg = `Ciao ${ctx.user_name}. Sono qui. Di cosa hai bisogno oggi?`;
         }
-      } catch {
-        // No profile in DB
+        setTimeout(() => addAIMessage(welcomeMsg), 500);
+        return;
       }
+    } catch {
+      // No profile in DB yet
     }
 
     setAppPhase("onboarding");
@@ -182,6 +141,13 @@ const Index = () => {
       setTimeout(() => addAIMessage(ONBOARDING_STEPS[0].aiMessage!), 1500);
     }, 500);
   }, [user, loadContext, addAIMessage]);
+
+  // When user logs in after splash, start the flow
+  useEffect(() => {
+    if (!showSplash && user && appPhase === "splash") {
+      handleSplashComplete();
+    }
+  }, [user, showSplash, appPhase, handleSplashComplete]);
 
   useEffect(() => {
     scrollToBottom();
@@ -196,15 +162,9 @@ const Index = () => {
   }) => {
     if (!user) return;
 
-    // For anonymous users, don't send to AI if they've hit the limit
-    if (isAnonymous && anonMsgCount >= ANON_MSG_LIMIT) {
-      setShowAuthGate(true);
-      return;
-    }
-
     setIsTyping(true);
     try {
-      const ctx = isAnonymous ? {} : await loadContext(user.id);
+      const ctx = await loadContext(user.id);
 
       const { data, error } = await supabase.functions.invoke("intus-chat", {
         body: {
@@ -216,7 +176,7 @@ const Index = () => {
               content: m.content,
             })),
           userContext: ctx,
-          userId: isAnonymous ? null : user.id,
+          userId: user.id,
           localHour: new Date().getHours(),
           ...(onboardingData ? { onboardingData } : {}),
         },
@@ -260,9 +220,6 @@ const Index = () => {
   };
 
   const handleSend = (text: string) => {
-    // If auth gate is showing, ignore input
-    if (showAuthGate) return;
-
     const userMsg: Message = { id: Date.now().toString(), content: text, sender: "user" };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
@@ -273,18 +230,6 @@ const Index = () => {
     if (appPhase === "onboarding") {
       handleOnboardingResponse(text);
     } else {
-      // Track anonymous message count
-      if (isAnonymous) {
-        const newCount = anonMsgCount + 1;
-        setAnonMsgCount(newCount);
-        localStorage.setItem(ANON_MSG_KEY, String(newCount));
-
-        if (newCount >= ANON_MSG_LIMIT) {
-          // Show auth gate instead of sending to AI
-          setShowAuthGate(true);
-          return;
-        }
-      }
       sendToAI(newMessages);
     }
   };
@@ -304,10 +249,8 @@ const Index = () => {
     } else {
       const finalProfile = { ...newProfile, onboardingComplete: true };
       setProfile(finalProfile);
-      localStorage.setItem("intus_profile", JSON.stringify(finalProfile));
 
-      // Only save to DB for non-anonymous users
-      if (user && !user.is_anonymous) {
+      if (user) {
         try {
           await saveProfile(user.id, {
             name: finalProfile.name,
@@ -321,7 +264,6 @@ const Index = () => {
 
       setAppPhase("conversation");
 
-      // Generate contextual first response via AI
       const contextualMessages = messages.concat([
         { id: "sys", content: text, sender: "user" as const },
       ]);
@@ -335,30 +277,7 @@ const Index = () => {
     }
   };
 
-  const handleAuthComplete = async () => {
-    setShowAuthGate(false);
-    localStorage.removeItem(ANON_MSG_KEY);
-    setAnonMsgCount(0);
-
-    // Save profile to DB now that user is authenticated
-    if (user && !user.is_anonymous && profile.onboardingComplete) {
-      try {
-        await saveProfile(user.id, {
-          name: profile.name,
-          ageRange: profile.ageRange,
-          lifeContext: profile.lifeContext,
-        });
-      } catch (err) {
-        console.error("Failed to save profile after auth:", err);
-      }
-    }
-
-    addAIMessage("Adesso ti ricorderò. Continua pure, sono qui.");
-  };
-
   const handleResetMemory = async () => {
-    localStorage.removeItem("intus_profile");
-    localStorage.removeItem(ANON_MSG_KEY);
     if (user) {
       try {
         await resetContext(user.id);
@@ -369,7 +288,6 @@ const Index = () => {
     setProfile({ name: "", ageRange: "", lifeContext: "", emotionalEntry: "", onboardingComplete: false });
     setMessages([]);
     setOnboardingStep(0);
-    setAnonMsgCount(0);
     setAppPhase("onboarding");
     setTimeout(() => {
       addAIMessage(PRESENTATION_MESSAGE);
@@ -379,6 +297,19 @@ const Index = () => {
 
   if (showSplash) {
     return <SplashScreen onComplete={handleSplashComplete} />;
+  }
+
+  // Show login screen if not authenticated
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-parchment flex items-center justify-center">
+        <span className="text-5xl text-trust-blue select-none animate-pulse">✦</span>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginScreen />;
   }
 
   return (
@@ -403,14 +334,6 @@ const Index = () => {
           </div>
         ))}
         {isTyping && <TypingIndicator />}
-
-        {/* Auth gate after 5 anonymous messages */}
-        {showAuthGate && (
-          <AuthGate
-            onComplete={handleAuthComplete}
-            onSkip={() => setShowAuthGate(false)}
-          />
-        )}
 
         {/* Silence mode offer */}
         {silenceModeOffered && !silenceMode && (
@@ -440,9 +363,9 @@ const Index = () => {
       {/* Input */}
       <ChatInput
         onSend={handleSend}
-        disabled={isTyping || showAuthGate}
-        guestMessageCount={anonMsgCount}
-        isAuthenticated={!isAnonymous}
+        disabled={isTyping}
+        guestMessageCount={0}
+        isAuthenticated={true}
       />
 
       {/* Settings */}
@@ -453,13 +376,12 @@ const Index = () => {
         onNameChange={(name) => {
           const updated = { ...profile, name };
           setProfile(updated);
-          localStorage.setItem("intus_profile", JSON.stringify(updated));
-          if (user && !user.is_anonymous) {
+          if (user) {
             supabase.from("intus_profiles").update({ user_name: name }).eq("id", user.id);
           }
         }}
         onResetMemory={handleResetMemory}
-        isAuthenticated={!isAnonymous}
+        isAuthenticated={true}
       />
 
       {/* Silence Mode */}
