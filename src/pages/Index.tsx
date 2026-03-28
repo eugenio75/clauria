@@ -317,7 +317,7 @@ const Index = () => {
     );
   }
 
-  if (!user) {
+  if (!isAuthenticated) {
     return <LoginScreen />;
   }
 
