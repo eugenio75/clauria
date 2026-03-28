@@ -79,6 +79,7 @@ const Index = () => {
   const [appPhase, setAppPhase] = useState<"splash" | "onboarding" | "conversation">("splash");
   const scrollRef = useRef<HTMLDivElement>(null);
   const { user, loading } = useIntusAuth();
+  const isAuthenticated = !!user && !user.is_anonymous;
   const { loadContext, saveProfile, resetContext } = useIntusContext();
 
   const scrollToBottom = useCallback(() => {
@@ -105,10 +106,16 @@ const Index = () => {
     }, 300);
   }, []);
 
-  const handleSplashComplete = useCallback(async () => {
-    setShowSplash(false);
+  const startOnboarding = useCallback(() => {
+    setAppPhase("onboarding");
+    setTimeout(() => {
+      addAIMessage(PRESENTATION_MESSAGE);
+      setTimeout(() => addAIMessage(ONBOARDING_STEPS[0].aiMessage!), 1500);
+    }, 500);
+  }, [addAIMessage]);
 
-    if (!user) return; // Will show LoginScreen
+  const startConversation = useCallback(async () => {
+    if (!user) return;
 
     try {
       const ctx = await loadContext(user.id);
@@ -135,19 +142,21 @@ const Index = () => {
       // No profile in DB yet
     }
 
-    setAppPhase("onboarding");
-    setTimeout(() => {
-      addAIMessage(PRESENTATION_MESSAGE);
-      setTimeout(() => addAIMessage(ONBOARDING_STEPS[0].aiMessage!), 1500);
-    }, 500);
-  }, [user, loadContext, addAIMessage]);
+    startOnboarding();
+  }, [user, loadContext, addAIMessage, startOnboarding]);
 
-  // When user logs in after splash, start the flow
+  const handleSplashComplete = useCallback(() => {
+    setShowSplash(false);
+  }, []);
+
+  // When splash is done and user is authenticated, start the flow
+  const hasStartedRef = useRef(false);
   useEffect(() => {
-    if (!showSplash && user && appPhase === "splash") {
-      handleSplashComplete();
+    if (!showSplash && isAuthenticated && !hasStartedRef.current) {
+      hasStartedRef.current = true;
+      startConversation();
     }
-  }, [user, showSplash, appPhase, handleSplashComplete]);
+  }, [showSplash, isAuthenticated, startConversation]);
 
   useEffect(() => {
     scrollToBottom();
@@ -295,6 +304,13 @@ const Index = () => {
     }, 500);
   };
 
+  // Sign out anonymous sessions so LoginScreen works cleanly
+  useEffect(() => {
+    if (!showSplash && !loading && user?.is_anonymous) {
+      supabase.auth.signOut();
+    }
+  }, [showSplash, loading, user]);
+
   if (showSplash) {
     return <SplashScreen onComplete={handleSplashComplete} />;
   }
@@ -308,7 +324,7 @@ const Index = () => {
     );
   }
 
-  if (!user) {
+  if (!isAuthenticated) {
     return <LoginScreen />;
   }
 
