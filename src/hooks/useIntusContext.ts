@@ -11,6 +11,7 @@ export interface IntusUserContext {
   pending_decisions?: string[];
   session_tone?: string;
   session_count?: number;
+  last_session_at?: string;
   recurring_theme_count?: number;
 }
 
