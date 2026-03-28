@@ -35,11 +35,11 @@ const ANON_MSG_KEY = "intus_anon_msg_count";
 
 const PRESENTATION_MESSAGE = `Ciao. Sono INTUS.
 
-Puoi parlarmi di quello che pesa, di quello che non riesci a decidere, di quello che non sai ancora dire a voce alta.
+Sono qui per ascoltarti.
 
-Sono qui per aiutarti a vedere più chiaramente — e a trovare la tua strada. La decisione resterà sempre tua.
+Puoi dirmi quello che hai dentro: quello che ti turba, quello che non riesci a risolvere, quello che non hai ancora detto a nessuno.
 
-Parlami pure, anche di notte, anche delle cose che non dici a nessuno.
+Anche di notte. Anche le cose più difficili.
 
 Prima di cominciare, aiutami a conoscerti un po'.`;
 
