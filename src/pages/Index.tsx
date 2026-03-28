@@ -295,12 +295,8 @@ const Index = () => {
     setShowWelcome(true);
   };
 
-  // Sign out anonymous sessions so LoginScreen works cleanly
-  useEffect(() => {
-    if (!showSplash && !loading && user?.is_anonymous) {
-      supabase.auth.signOut();
-    }
-  }, [showSplash, loading, user]);
+  // Guest users skip login screen
+  const isAuthenticated = !!user;
 
   if (showSplash) {
     return <SplashScreen onComplete={handleSplashComplete} />;
