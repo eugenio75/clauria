@@ -360,7 +360,7 @@ const Index = () => {
   }
 
   // Wait until auth is fully restored before deciding which screen to show
-  if (!isReady) {
+  if (!isReady || checkingProfile) {
     return (
       <div className="fixed inset-0 bg-parchment flex items-center justify-center">
         <span className="text-5xl text-trust-blue select-none animate-pulse">✦</span>
@@ -368,17 +368,9 @@ const Index = () => {
     );
   }
 
-  if (!isAuthenticated) {
+  // Show login if: not authenticated, OR authenticated but no completed profile (stale session)
+  if (!isAuthenticated || (!skipLogin && appPhase === "splash")) {
     return <LoginScreen />;
-  }
-
-  // Prevent the empty chat shell from flashing while deciding between welcome and conversation
-  if (isAuthenticated && appPhase === "splash" && !showWelcome) {
-    return (
-      <div className="fixed inset-0 bg-parchment flex items-center justify-center">
-        <span className="text-5xl text-trust-blue select-none animate-pulse">✦</span>
-      </div>
-    );
   }
 
   if (showWelcome) {
