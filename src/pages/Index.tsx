@@ -181,14 +181,12 @@ const Index = () => {
       {/* Header */}
       <header className="flex items-center justify-between px-5 py-4 pt-safe">
         <h1 className="font-display text-xl tracking-wide text-foreground">INTUS</h1>
-        {profile.onboardingComplete && (
-          <button
-            onClick={() => setSettingsOpen(true)}
-            className="text-muted-foreground/60 hover:text-muted-foreground transition-colors"
-          >
-            <MoreHorizontal className="w-5 h-5" />
-          </button>
-        )}
+        <button
+          onClick={() => setSettingsOpen(true)}
+          className="text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+        >
+          <MoreHorizontal className="w-5 h-5" />
+        </button>
       </header>
 
       {/* Messages */}
