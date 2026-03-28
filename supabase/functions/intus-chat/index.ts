@@ -77,8 +77,8 @@ function getLiturgicalSeason(date: Date): { season: string; note: string } {
 
 // ─── Night Context ─────────────────────────────────────────
 function getNightContext(localHour: number): string {
-  const isLateNight = localHour >= 0 && localHour < 4;
-  const isNight = localHour >= 22 || localHour < 5;
+  const isLateNight = localHour >= 0 && localHour <= 4;
+  const isNight = localHour >= 22 || localHour <= 4;
 
   if (isLateNight) {
     return `
