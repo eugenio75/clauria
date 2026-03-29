@@ -25,17 +25,17 @@ interface EmailHookPayload {
 function getSubject(actionType: string): string {
   switch (actionType) {
     case "signup":
-      return "INTUS — Conferma la tua email";
+      return "CLAURIA — Conferma la tua email";
     case "magiclink":
-      return "INTUS — Il tuo codice di accesso";
+      return "CLAURIA — Il tuo codice di accesso";
     case "recovery":
-      return "INTUS — Reimposta la password";
+      return "CLAURIA — Reimposta la password";
     case "email_change":
-      return "INTUS — Conferma cambio email";
+      return "CLAURIA — Conferma cambio email";
     case "reauthentication":
-      return "INTUS — Codice di verifica";
+      return "CLAURIA — Codice di verifica";
     default:
-      return "INTUS — Codice di verifica";
+      return "CLAURIA — Codice di verifica";
   }
 }
 
@@ -61,7 +61,7 @@ function getEmailBody(actionType: string, token: string): string {
           </tr>
           <tr>
             <td align="center" style="padding-bottom:8px;">
-              <h1 style="margin:0;font-size:22px;font-weight:normal;letter-spacing:2px;color:#2d2d2d;">INTUS</h1>
+              <h1 style="margin:0;font-size:22px;font-weight:normal;letter-spacing:2px;color:#2d2d2d;">CLAURIA</h1>
             </td>
           </tr>
           <tr>
@@ -119,7 +119,7 @@ serve(async (req) => {
     const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "465");
     const smtpUsername = Deno.env.get("SMTP_USERNAME") || "";
     const smtpPassword = Deno.env.get("SMTP_PASSWORD") || "";
-    const smtpFrom = Deno.env.get("SMTP_FROM") || "INTUS <noreply@tenks.co>";
+    const smtpFrom = Deno.env.get("SMTP_FROM") || "CLAURIA <noreply@tenks.co>";
 
     const client = new SMTPClient({
       connection: {

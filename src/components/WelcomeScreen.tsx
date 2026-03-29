@@ -6,7 +6,7 @@ interface WelcomeScreenProps {
 }
 
 const LINES = [
-  { text: "Ciao. Sono INTUS.", fadeMs: 1200, waitMs: 2000 },
+  { text: "Ciao. Sono CLAURIA.", fadeMs: 1200, waitMs: 2000 },
   { text: "Sono qui per ascoltarti.", fadeMs: 1200, waitMs: 2000 },
   { text: "Puoi dirmi quello che hai dentro:", fadeMs: 1200, waitMs: 1500 },
   { text: "quello che ti turba,", fadeMs: 1000, waitMs: 1200 },

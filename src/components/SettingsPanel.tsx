@@ -80,7 +80,7 @@ const SettingsPanel = ({ isOpen, onClose, userName, onNameChange, onResetMemory,
                 <div>
                   {showConfirm ? (
                     <div className="space-y-2">
-                      <p className="text-sm text-foreground">Sei sicuro/a? Questo cancellerà tutto il contesto che INTUS ha di te.</p>
+                      <p className="text-sm text-foreground">Sei sicuro/a? Questo cancellerà tutto il contesto che CLAURIA ha di te.</p>
                       <div className="flex gap-3">
                         <button
                           onClick={() => {
@@ -119,7 +119,7 @@ const SettingsPanel = ({ isOpen, onClose, userName, onNameChange, onResetMemory,
                     Privacy
                   </button>
                   <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                    INTUS non conserva mai le tue conversazioni. Memorizza solo un contesto sintetico 
+                    CLAURIA non conserva mai le tue conversazioni. Memorizza solo un contesto sintetico 
                     (stato emotivo, situazione) per offrirti continuità. Puoi cancellarlo in qualsiasi momento.
                   </p>
                 </div>
