@@ -33,7 +33,7 @@ export function useIntusContext() {
       supabase.from("intus_context").select("*").eq("user_id", userId).single(),
     ]);
 
-    return { ...profile, ...context } as IntusUserContext;
+    return { ...profile, ...context } as unknown as IntusUserContext;
   }, []);
 
   const saveProfile = useCallback(async (userId: string, profile: {
