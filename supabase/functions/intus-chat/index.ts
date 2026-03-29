@@ -1758,7 +1758,11 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
     let contextUpdate = null;
     if (contextMatch) {
       try {
-        contextUpdate = JSON.parse(contextMatch[1].trim());
+        // Try to fix common JSON issues from AI output
+        let jsonStr = contextMatch[1].trim();
+        // Replace "true or false or null" patterns with null
+        jsonStr = jsonStr.replace(/:\s*true\s+or\s+false\s+or\s+null/g, ': null');
+        contextUpdate = JSON.parse(jsonStr);
       } catch {
         console.error("Failed to parse context update");
       }
