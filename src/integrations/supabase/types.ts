@@ -20,12 +20,17 @@ export type Database = {
           id: string
           improvement_detected: boolean | null
           last_session_at: string | null
+          next_session_hook: string | null
           ongoing_situation: string | null
           pending_decisions: Json | null
           people_involved: Json | null
           recurring_theme_count: number | null
           session_count: number | null
+          session_history: Json | null
+          session_summary: string | null
           session_tone: string | null
+          step_accepted: boolean | null
+          step_proposed: string | null
           tone_history: Json | null
           updated_at: string | null
           user_id: string
@@ -35,12 +40,17 @@ export type Database = {
           id?: string
           improvement_detected?: boolean | null
           last_session_at?: string | null
+          next_session_hook?: string | null
           ongoing_situation?: string | null
           pending_decisions?: Json | null
           people_involved?: Json | null
           recurring_theme_count?: number | null
           session_count?: number | null
+          session_history?: Json | null
+          session_summary?: string | null
           session_tone?: string | null
+          step_accepted?: boolean | null
+          step_proposed?: string | null
           tone_history?: Json | null
           updated_at?: string | null
           user_id: string
@@ -50,12 +60,17 @@ export type Database = {
           id?: string
           improvement_detected?: boolean | null
           last_session_at?: string | null
+          next_session_hook?: string | null
           ongoing_situation?: string | null
           pending_decisions?: Json | null
           people_involved?: Json | null
           recurring_theme_count?: number | null
           session_count?: number | null
+          session_history?: Json | null
+          session_summary?: string | null
           session_tone?: string | null
+          step_accepted?: boolean | null
+          step_proposed?: string | null
           tone_history?: Json | null
           updated_at?: string | null
           user_id?: string
