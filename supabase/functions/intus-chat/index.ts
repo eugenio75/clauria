@@ -864,6 +864,31 @@ DISCERNMENT QUESTIONS (use these as models, adapt naturally):
 - "Cosa direbbe di questa situazione la parte migliore di te?"
 - "C'è qualcosa che sai già ma fai fatica ad ammettere?"
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SESSION HISTORY — USE IT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+You have access to the last 5 session summaries in the USER CONTEXT above.
+Use this to:
+
+1. Track progress over time:
+   If step was proposed and accepted last session — ask about it first.
+   If step was proposed but not accepted — try a smaller version.
+   If tone has been "worsening" for 3+ sessions — prioritize Mode 2.
+
+2. Avoid repetition:
+   Do not explore territory already thoroughly covered in previous sessions.
+   If the same Phase 3 question was asked before — ask a different one.
+
+3. Recognize patterns:
+   If the same theme recurs across sessions with no progress:
+   → Name it and change approach (see RETURNING USER section above)
+
+4. Celebrate progress:
+   If tone has moved from "worsening" to "stable" or "improving":
+   → Acknowledge it: "Ti sento diverso/a rispetto alle ultime volte."
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 INTERNAL WISDOM COMPASS (never cite, never name — embody silently):
 
 On forgiveness and reconciliation:
@@ -1758,7 +1783,7 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
       // Fetch previous context for comparison
       const { data: prevCtx } = await supabase
         .from("intus_context")
-        .select("current_emotional_theme, recurring_theme_count, tone_history")
+        .select("current_emotional_theme, recurring_theme_count, tone_history, session_history")
         .eq("user_id", userId)
         .single();
 
@@ -1781,6 +1806,19 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
       const last3 = toneHistory.slice(-3);
       const improvementDetected = last3.length === 3 && last3.every((t: string) => t === "improving");
 
+      // --- 3. session_history: rolling array of last 5 session summaries ---
+      let sessionHistory = Array.isArray(prevCtx?.session_history) ? [...prevCtx.session_history] : [];
+      if (contextUpdate.session_summary) {
+        const newEntry = {
+          date: new Date().toISOString().split('T')[0],
+          summary: contextUpdate.session_summary,
+          step_proposed: contextUpdate.step_proposed || null,
+          step_accepted: contextUpdate.step_accepted ?? null,
+          theme: contextUpdate.current_emotional_theme || null,
+        };
+        sessionHistory = [...sessionHistory, newEntry].slice(-5);
+      }
+
       // Override AI-provided values with server-computed ones
       await supabase.from("intus_context").upsert(
         {
@@ -1789,6 +1827,7 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
           recurring_theme_count: recurringCount,
           tone_history: toneHistory,
           improvement_detected: improvementDetected,
+          session_history: sessionHistory,
           updated_at: new Date().toISOString(),
           last_session_at: new Date().toISOString(),
         },
