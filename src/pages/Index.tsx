@@ -193,8 +193,19 @@ const Index = () => {
             : Infinity;
           const showBentornato = !isContinuingSession && hoursSinceLast >= 8;
 
+          // Build contextual welcome using priority order
           let welcomeMsg: string;
-          if (showBentornato && ctx.session_count > 1 && ctx.ongoing_situation) {
+          if (showBentornato && ctx.next_session_hook) {
+            // PRIORITY 1: Use exact hook from last session
+            welcomeMsg = ctx.next_session_hook;
+          } else if (showBentornato && ctx.step_proposed) {
+            // PRIORITY 2: Reference the step proposed
+            welcomeMsg = `L'ultima volta avevi parlato di ${ctx.ongoing_situation || 'qualcosa di importante'} e avevi deciso di ${ctx.step_proposed}. Com'è andata?`;
+          } else if ((ctx.recurring_theme_count || 0) >= 3) {
+            // PRIORITY 3: Persistent theme
+            welcomeMsg = `Vedo che torniamo spesso su ${ctx.current_emotional_theme || 'questo tema'}. Invece di continuare a esplorarlo — vuoi provare qualcosa di concreto questa volta?`;
+          } else if (showBentornato && ctx.session_count && ctx.session_count > 1 && ctx.ongoing_situation) {
+            // PRIORITY 4: Standard re-entry
             welcomeMsg = `Bentornato/a ${ctx.user_name}. L'ultima volta mi parlavi di ${ctx.ongoing_situation}. Come è andata?`;
           } else {
             welcomeMsg = `Ciao ${ctx.user_name}. Sono qui. Di cosa hai bisogno oggi?`;
