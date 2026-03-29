@@ -27,7 +27,7 @@ function getEmailHtml(code: string): string {
     <tr><td align="center">
       <table role="presentation" width="420" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:16px;padding:40px 32px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
         <tr><td align="center" style="padding-bottom:24px;"><span style="font-size:28px;color:#6b8cae;">✦</span></td></tr>
-        <tr><td align="center" style="padding-bottom:8px;"><h1 style="margin:0;font-size:22px;font-weight:normal;letter-spacing:2px;color:#2d2d2d;">INTUS</h1></td></tr>
+        <tr><td align="center" style="padding-bottom:8px;"><h1 style="margin:0;font-size:22px;font-weight:normal;letter-spacing:2px;color:#2d2d2d;">CLAURIA</h1></td></tr>
         <tr><td align="center" style="padding-bottom:32px;"><p style="margin:0;font-size:14px;color:#8a8a8a;font-style:italic;">Non sei solo.</p></td></tr>
         <tr><td align="center" style="padding-bottom:16px;"><p style="margin:0;font-size:15px;color:#555555;line-height:1.7;">Ecco il tuo codice di accesso:</p></td></tr>
         <tr><td align="center" style="padding-bottom:32px;"><div style="font-size:32px;letter-spacing:8px;font-family:monospace;color:#2d2d2d;background-color:#f5f3ef;border-radius:12px;padding:16px 24px;display:inline-block;">${code}</div></td></tr>
@@ -90,7 +90,7 @@ serve(async (req) => {
     if (insertError) throw insertError;
 
     // Send via SMTP
-    const smtpFrom = Deno.env.get("SMTP_FROM") || "INTUS <noreply@tenks.co>";
+    const smtpFrom = Deno.env.get("SMTP_FROM") || "CLAURIA <noreply@tenks.co>";
     const smtpUsernameRaw = (Deno.env.get("SMTP_USERNAME") || "").trim();
     const smtpUsername = smtpUsernameRaw.includes("@")
       ? smtpUsernameRaw.toLowerCase()
@@ -117,7 +117,7 @@ serve(async (req) => {
       await client.send({
         from: smtpFrom,
         to: email.trim(),
-        subject: "INTUS — Il tuo codice di accesso",
+        subject: "CLAURIA — Il tuo codice di accesso",
         content: "auto",
         html: getEmailHtml(code),
       });

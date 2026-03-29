@@ -33,7 +33,7 @@ const SplashScreen = ({ onComplete, fadingOut = false }: SplashScreenProps) => {
         transition={{ duration: 0.6, delay: 0.6 }}
         className="font-display text-4xl tracking-wide text-foreground mb-3"
       >
-        INTUS
+        CLAURIA
       </motion.h1>
       <motion.p
         initial={{ opacity: 0 }}

@@ -120,7 +120,7 @@ const LoginScreen = () => {
         {/* Logo */}
         <div className="text-center space-y-3">
           <span className="text-5xl text-trust-blue select-none block">✦</span>
-          <h1 className="font-display text-3xl tracking-wide text-foreground">INTUS</h1>
+          <h1 className="font-display text-3xl tracking-wide text-foreground">CLAURIA</h1>
           <p className="font-display italic text-muted-foreground text-sm">Non sei solo.</p>
         </div>
 

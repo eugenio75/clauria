@@ -428,7 +428,7 @@ const Index = () => {
     <div className="flex flex-col h-[100dvh] bg-parchment max-w-[600px] mx-auto overflow-x-hidden">
       {/* Header */}
       <header className="flex items-center justify-between px-5 py-4 pt-safe">
-        <h1 className="font-display text-xl tracking-wide text-foreground">INTUS</h1>
+        <h1 className="font-display text-xl tracking-wide text-foreground">CLAURIA</h1>
         <button
           onClick={() => setSettingsOpen(true)}
           className="text-muted-foreground/60 hover:text-muted-foreground transition-colors"
