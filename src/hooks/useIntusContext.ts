@@ -13,6 +13,17 @@ export interface IntusUserContext {
   session_count?: number;
   last_session_at?: string;
   recurring_theme_count?: number;
+  step_proposed?: string;
+  step_accepted?: boolean | null;
+  next_session_hook?: string;
+  session_summary?: string;
+  session_history?: Array<{
+    date: string;
+    summary: string;
+    step_proposed?: string;
+    step_accepted?: boolean | null;
+    theme?: string;
+  }>;
 }
 
 export function useIntusContext() {
@@ -22,7 +33,7 @@ export function useIntusContext() {
       supabase.from("intus_context").select("*").eq("user_id", userId).single(),
     ]);
 
-    return { ...profile, ...context } as IntusUserContext;
+    return { ...profile, ...context } as unknown as IntusUserContext;
   }, []);
 
   const saveProfile = useCallback(async (userId: string, profile: {
