@@ -235,6 +235,19 @@ const Index = () => {
     }
     // If user changed from what was at mount → this is a fresh auth action
     if (user && user.id !== mountUserRef.current) {
+      // Check if we need to migrate guest data
+      const anonId = localStorage.getItem("intus_anon_id");
+      if (anonId && anonId !== user.id && !user.is_anonymous) {
+        // Migrate guest data to new authenticated user
+        supabase.functions.invoke("migrate-guest-data", {
+          body: { anonUserId: anonId, newUserId: user.id },
+        }).then(({ error }) => {
+          if (error) console.error("Guest data migration failed:", error);
+          else console.log("Guest data migrated successfully");
+        }).finally(() => {
+          localStorage.removeItem("intus_anon_id");
+        });
+      }
       setSkipLogin(true);
       startConversation();
     }

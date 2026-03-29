@@ -12,7 +12,15 @@ export function useIntusAuth() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!isMounted) return;
-      setUser(session?.user ?? null);
+      const newUser = session?.user ?? null;
+      
+      // If transitioning FROM anonymous to authenticated, the anon ID was already saved
+      // If current user is anonymous, save their ID for potential future migration
+      if (newUser?.is_anonymous) {
+        localStorage.setItem("intus_anon_id", newUser.id);
+      }
+      
+      setUser(newUser);
 
       if (hasInitialized) {
         setLoading(false);
