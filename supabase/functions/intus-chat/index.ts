@@ -1772,10 +1772,16 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
     // Parse crisis level
     const isCrisisLevel3 = rawText.includes("[CRISIS_LEVEL_3]");
 
-    // Clean response
+    // Clean response — strip ALL internal markers and system prompt leakage
     const cleanText = rawText
       .replace(/\[CONTEXT_UPDATE\][\s\S]*?\[\/CONTEXT_UPDATE\]/g, "")
-      .replace("[CRISIS_LEVEL_3]", "")
+      .replace(/\[CRISIS_LEVEL_3\]/g, "")
+      // Strip any leaked system prompt fragments
+      .replace(/CONTEXT[_ ]UPDATE[_ ]REQUIRED[^.]*.?\./gi, "")
+      .replace(/\[?CONTEXT[_ ]UPDATE\]?/gi, "")
+      .replace(/━+/g, "")
+      .replace(/^(MODE \d|SITUATION \d|ABSOLUTE RULE|CRITICAL|IMPORTANT)[^\n]*\n?/gm, "")
+      .replace(/\n{3,}/g, "\n\n")
       .trim();
 
     // Save context update to Supabase with server-side theme & tone tracking
