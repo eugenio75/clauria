@@ -73,7 +73,7 @@ const WelcomeScreen = ({ onComplete }: WelcomeScreenProps) => {
             {pages[page].lines.map((line, i) => (
               <p
                 key={i}
-                className="text-foreground text-[1.15rem] leading-[2] font-display"
+                className="text-foreground text-2xl leading-[2] font-display"
               >
                 {line}
               </p>
