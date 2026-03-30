@@ -99,9 +99,36 @@ const Index = () => {
 
   const handleWelcomeComplete = useCallback(() => {
     setShowWelcome(false);
+    // Check if profile already has required data — skip onboarding if so
+    if (profile.name && profile.ageRange && profile.lifeContext) {
+      setProfile(prev => ({ ...prev, onboardingComplete: true }));
+      setAppPhase("conversation");
+      const welcomeMsg = `Ciao ${profile.name}. Sono qui. Di cosa hai bisogno oggi?`;
+      setTimeout(() => addAIMessage(welcomeMsg), 500);
+      return;
+    }
     setAppPhase("onboarding");
-    setTimeout(() => addAIMessage(ONBOARDING_STEPS[0].aiMessage!), 500);
-  }, [addAIMessage, t]);
+    // Find the first unanswered onboarding step
+    const fields = ["name", "ageRange", "lifeContext", "emotionalEntry"] as const;
+    let firstEmpty = 0;
+    for (let i = 0; i < fields.length; i++) {
+      if (!profile[fields[i]]) {
+        firstEmpty = i;
+        break;
+      }
+      if (i === fields.length - 1) firstEmpty = fields.length; // all filled
+    }
+    if (firstEmpty >= ONBOARDING_STEPS.length) {
+      // All steps already filled, go to conversation
+      setProfile(prev => ({ ...prev, onboardingComplete: true }));
+      setAppPhase("conversation");
+      return;
+    }
+    setOnboardingStep(firstEmpty);
+    const step = ONBOARDING_STEPS[firstEmpty];
+    const msg = step.aiMessageFn ? step.aiMessageFn(profile.name) : step.aiMessage!;
+    setTimeout(() => addAIMessage(msg), 500);
+  }, [addAIMessage, profile, ONBOARDING_STEPS]);
 
   const startConversation = useCallback(async () => {
     if (!user) return;
@@ -131,6 +158,7 @@ const Index = () => {
           welcomeMsg = `Ciao ${ctx.user_name}. Sono qui. Di cosa hai bisogno oggi?`;
         }
         setTimeout(() => addAIMessage(welcomeMsg), 500);
+        return; // Skip onboarding entirely
       }
     } catch {
       // No profile in DB yet
@@ -156,7 +184,9 @@ const Index = () => {
       const isContinuingSession = sessionStorage.getItem("intus_session_active") === "true";
 
       loadContext(user!.id).then((ctx) => {
-        if (ctx.user_name && ctx.session_count && ctx.session_count > 0) {
+        const hasProfile = ctx.user_name && ctx.session_count && ctx.session_count > 0;
+        
+        if (hasProfile) {
           setSkipLogin(true);
           setProfile({
             name: ctx.user_name || "",
@@ -187,6 +217,17 @@ const Index = () => {
             welcomeMsg = `Ciao ${ctx.user_name}. Sono qui. Di cosa hai bisogno oggi?`;
           }
           setTimeout(() => addAIMessage(welcomeMsg), 500);
+        } else {
+          // Check if we have partial profile data (name, age, life_context) even without completed onboarding
+          // This prevents re-asking questions the user already answered
+          const partialProfile = {
+            name: ctx.user_name || "",
+            ageRange: ctx.age_range || "",
+            lifeContext: ctx.life_context || "",
+          };
+          if (partialProfile.name) {
+            setProfile(prev => ({ ...prev, ...partialProfile }));
+          }
         }
       }).catch(() => {
       }).finally(() => {

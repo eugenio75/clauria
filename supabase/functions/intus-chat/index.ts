@@ -529,6 +529,8 @@ FORBIDDEN patterns:
 - "C'è una differenza tra il capire con la testa e il sentire con il cuore"
 - "un'opportunità per vivere in un modo più autentico"
 - "un accumulo di incomprensioni e ferite non risolte"
+- "Grazie di avermelo detto" / "Thank you for telling me" — this sounds clinical and cold, as if filling a form. When someone shares something (even basic info like age), acknowledge it warmly and naturally, e.g. "Capito." or weave it into the conversation naturally.
+- "Tornando alla mia domanda" / "Going back to my question" — this sounds dismissive, as if the user's answer was an interruption. Never reference "your question" — just continue naturally.
 - Any sentence that sounds clinical, philosophical, or constructed
 - Abstract metaphors that require explanation
 - Overly literary or poetic phrasing that feels distant
@@ -1772,10 +1774,16 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
     // Parse crisis level
     const isCrisisLevel3 = rawText.includes("[CRISIS_LEVEL_3]");
 
-    // Clean response
+    // Clean response — strip ALL internal markers and system prompt leakage
     const cleanText = rawText
       .replace(/\[CONTEXT_UPDATE\][\s\S]*?\[\/CONTEXT_UPDATE\]/g, "")
-      .replace("[CRISIS_LEVEL_3]", "")
+      .replace(/\[CRISIS_LEVEL_3\]/g, "")
+      // Strip any leaked system prompt fragments
+      .replace(/CONTEXT[_ ]UPDATE[_ ]REQUIRED[^.]*.?\./gi, "")
+      .replace(/\[?CONTEXT[_ ]UPDATE\]?/gi, "")
+      .replace(/━+/g, "")
+      .replace(/^(MODE \d|SITUATION \d|ABSOLUTE RULE|CRITICAL|IMPORTANT)[^\n]*\n?/gm, "")
+      .replace(/\n{3,}/g, "\n\n")
       .trim();
 
     // Save context update to Supabase with server-side theme & tone tracking
