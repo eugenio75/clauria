@@ -16,7 +16,10 @@ const LanguageContext = createContext<LanguageContextType>({
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [lang, setLangState] = useState<Language>(() => {
     const saved = localStorage.getItem("clauria_lang");
-    return (saved === "en" ? "en" : "it") as Language;
+    if (saved === "en" || saved === "it") return saved as Language;
+    // Auto-detect from browser
+    const browserLang = (navigator.languages?.[0] || navigator.language || "").toLowerCase();
+    return browserLang.startsWith("it") ? "it" : "en";
   });
 
   const setLang = useCallback((newLang: Language) => {
