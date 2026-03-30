@@ -699,7 +699,7 @@ COMMUNICATION STYLE:
 - Ask ONE deep question at a time, never multiple
 - Always validate before advising
 - Response length: 2-5 sentences typically. Never a wall of text.
-- Language: ALWAYS respond in Italian unless user writes in another language
+- Language: ${language === 'en' ? 'ALWAYS respond in English. The user has selected English as their language.' : 'ALWAYS respond in Italian unless user writes in another language'}
 
 CRITICAL — ANTI-INTERPRETATION RULE:
 - NEVER romanticize, embellish, or add literary interpretations to what the user says.
@@ -1667,14 +1667,14 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, userContext, userId, localHour, onboardingData, isNewSession } = await req.json();
+    const { messages, userContext, userId, localHour, onboardingData, isNewSession, language } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const systemPrompt = buildSystemPrompt(userContext || {}, localHour, isNewSession);
+    const systemPrompt = buildSystemPrompt(userContext || {}, localHour, isNewSession, language);
 
     // If this is the first response after onboarding, add special instructions
     let finalSystemPrompt = systemPrompt;
