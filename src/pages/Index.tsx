@@ -156,7 +156,9 @@ const Index = () => {
       const isContinuingSession = sessionStorage.getItem("intus_session_active") === "true";
 
       loadContext(user!.id).then((ctx) => {
-        if (ctx.user_name && ctx.session_count && ctx.session_count > 0) {
+        const hasProfile = ctx.user_name && ctx.session_count && ctx.session_count > 0;
+        
+        if (hasProfile) {
           setSkipLogin(true);
           setProfile({
             name: ctx.user_name || "",
@@ -187,6 +189,17 @@ const Index = () => {
             welcomeMsg = `Ciao ${ctx.user_name}. Sono qui. Di cosa hai bisogno oggi?`;
           }
           setTimeout(() => addAIMessage(welcomeMsg), 500);
+        } else {
+          // Check if we have partial profile data (name, age, life_context) even without completed onboarding
+          // This prevents re-asking questions the user already answered
+          const partialProfile = {
+            name: ctx.user_name || "",
+            ageRange: ctx.age_range || "",
+            lifeContext: ctx.life_context || "",
+          };
+          if (partialProfile.name) {
+            setProfile(prev => ({ ...prev, ...partialProfile }));
+          }
         }
       }).catch(() => {
       }).finally(() => {
