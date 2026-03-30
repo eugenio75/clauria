@@ -70,14 +70,29 @@ const WelcomeScreen = ({ onComplete }: WelcomeScreenProps) => {
             transition={{ duration: 0.4, ease: "easeInOut" }}
             className="space-y-4"
           >
-            {pages[page].lines.map((line, i) => (
-              <p
-                key={i}
-                className="text-foreground text-2xl leading-[2] font-display"
-              >
-                {line}
-              </p>
-            ))}
+            {page === 0 ? (
+              <>
+                <p className="text-foreground text-2xl leading-[2] font-display">
+                  {lang === "en" ? "Hi." : "Ciao."}
+                </p>
+                <p className="text-foreground leading-[1.6] font-display">
+                  <span className="text-2xl">{lang === "en" ? "I am " : "Sono "}</span>
+                  <span className="text-4xl font-semibold tracking-wide">Clauria.</span>
+                </p>
+                <p className="text-foreground text-2xl leading-[2] font-display mt-2">
+                  {t("welcome_p1_l2")}
+                </p>
+              </>
+            ) : (
+              pages[page].lines.map((line, i) => (
+                <p
+                  key={i}
+                  className="text-foreground text-2xl leading-[2] font-display"
+                >
+                  {line}
+                </p>
+              ))
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
