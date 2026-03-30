@@ -110,7 +110,8 @@ The user is reaching out in the evening or night hours.
 function buildSystemPrompt(
   ctx: Record<string, unknown>,
   localHour?: number,
-  isNewSession?: boolean
+  isNewSession?: boolean,
+  language?: string
 ): string {
   const liturgical = getLiturgicalSeason(new Date());
   const liturgicalNote = liturgical.note
