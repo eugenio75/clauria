@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { ArrowUp } from "lucide-react";
+import { useLanguage } from "../i18n/LanguageContext";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -9,9 +10,10 @@ interface ChatInputProps {
   isAuthenticated?: boolean;
 }
 
-const ChatInput = ({ onSend, disabled, placeholder = "Scrivi qui...", guestMessageCount = 0, isAuthenticated = false }: ChatInputProps) => {
+const ChatInput = ({ onSend, disabled, placeholder, guestMessageCount = 0, isAuthenticated = false }: ChatInputProps) => {
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -27,13 +29,13 @@ const ChatInput = ({ onSend, disabled, placeholder = "Scrivi qui...", guestMessa
     setValue("");
   };
 
+  const remaining = 5 - guestMessageCount;
+
   return (
     <div className="border-t border-border/50 bg-parchment px-4 py-3 pb-safe">
       {!isAuthenticated && guestMessageCount >= 3 && (
         <p className="text-xs text-muted-foreground/60 italic text-center mt-0 mb-2">
-          {`Hai ancora ${5 - guestMessageCount} ${
-            5 - guestMessageCount === 1 ? 'conversazione' : 'conversazioni'
-          } oggi come ospite.`}
+          {t("chat_guest_remaining")(remaining)}
         </p>
       )}
       <div className="flex items-end gap-2 max-w-[600px] mx-auto">
@@ -47,7 +49,7 @@ const ChatInput = ({ onSend, disabled, placeholder = "Scrivi qui...", guestMessa
               handleSubmit();
             }
           }}
-          placeholder={placeholder}
+          placeholder={placeholder || t("chat_placeholder")}
           disabled={disabled}
           rows={1}
           className="flex-1 resize-none bg-transparent text-foreground text-[15px] placeholder:text-muted-foreground/60 focus:outline-none py-2"
