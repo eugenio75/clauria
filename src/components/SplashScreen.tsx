@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useEffect } from "react";
+import { useLanguage } from "../i18n/LanguageContext";
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -7,6 +8,8 @@ interface SplashScreenProps {
 }
 
 const SplashScreen = ({ onComplete, fadingOut = false }: SplashScreenProps) => {
+  const { t } = useLanguage();
+
   useEffect(() => {
     const timer = setTimeout(onComplete, 2500);
     return () => clearTimeout(timer);
@@ -41,7 +44,7 @@ const SplashScreen = ({ onComplete, fadingOut = false }: SplashScreenProps) => {
         transition={{ duration: 0.6, delay: 1.0 }}
         className="font-display italic text-muted-foreground text-sm"
       >
-        Non sei solo.
+        {t("splash_tagline")}
       </motion.p>
     </motion.div>
   );

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { useLanguage } from "../i18n/LanguageContext";
 
 type AuthStep = "choose" | "email" | "otp";
 
@@ -11,6 +12,7 @@ const LoginScreen = () => {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
+  const { t } = useLanguage();
 
   const clearError = () => setInlineError(null);
 
@@ -20,10 +22,9 @@ const LoginScreen = () => {
     try {
       const { error } = await supabase.auth.signInAnonymously();
       if (error) throw error;
-      // Session change will be picked up by useIntusAuth → Index will navigate away
     } catch (err) {
       console.error(err);
-      setInlineError("Qualcosa non ha funzionato. Riprova.");
+      setInlineError(t("login_error_generic"));
     } finally {
       setLoading(false);
     }
@@ -39,7 +40,7 @@ const LoginScreen = () => {
       if (error) throw error;
     } catch (err) {
       console.error(err);
-      setInlineError("Accesso con Google non riuscito. Riprova.");
+      setInlineError(t("login_error_google"));
     } finally {
       setLoading(false);
     }
@@ -55,7 +56,7 @@ const LoginScreen = () => {
       if (error) throw error;
     } catch (err) {
       console.error(err);
-      setInlineError("Accesso con Apple non riuscito. Riprova.");
+      setInlineError(t("login_error_apple"));
     } finally {
       setLoading(false);
     }
@@ -74,7 +75,7 @@ const LoginScreen = () => {
       setStep("otp");
     } catch (err) {
       console.error(err);
-      setInlineError("Non riesco a inviare la mail in questo momento. Riprova tra qualche minuto.");
+      setInlineError(t("login_error_email"));
     } finally {
       setLoading(false);
     }
@@ -101,8 +102,8 @@ const LoginScreen = () => {
     } catch (err) {
       console.error(err);
       const msg = err instanceof Error && err.message.includes("non valido")
-        ? "Codice non valido o scaduto. Riprova."
-        : "Qualcosa non ha funzionato. Riprova.";
+        ? t("login_error_otp_invalid")
+        : t("login_error_generic");
       setInlineError(msg);
     } finally {
       setLoading(false);
@@ -121,13 +122,13 @@ const LoginScreen = () => {
         <div className="text-center space-y-3">
           <span className="text-5xl text-trust-blue select-none block">✦</span>
           <h1 className="font-display text-3xl tracking-wide text-foreground">CLAURIA</h1>
-          <p className="font-display italic text-muted-foreground text-sm">Non sei solo.</p>
+          <p className="font-display italic text-muted-foreground text-sm">{t("login_subtitle")}</p>
         </div>
 
         {/* Auth card */}
         <div className="bg-ai-bubble rounded-2xl shadow-sm px-5 py-6 space-y-4">
           <p className="text-foreground text-[15px] leading-relaxed text-center" style={{ lineHeight: "1.8" }}>
-            Accedi per iniziare
+            {t("login_access")}
           </p>
 
           {/* Inline error message */}
@@ -154,7 +155,7 @@ const LoginScreen = () => {
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
                 </svg>
-                Continua con Apple
+                {t("login_apple")}
               </button>
 
               <button
@@ -168,7 +169,7 @@ const LoginScreen = () => {
                   <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                 </svg>
-                Continua con Google
+                {t("login_google")}
               </button>
 
               <button
@@ -176,7 +177,7 @@ const LoginScreen = () => {
                 disabled={loading}
                 className="w-full flex items-center justify-center gap-2.5 bg-muted/60 rounded-xl py-3 text-[15px] font-medium text-foreground transition-opacity disabled:opacity-50"
               >
-                ✉️ Usa la tua mail
+                {t("login_email")}
               </button>
 
               <div className="relative my-2">
@@ -184,7 +185,7 @@ const LoginScreen = () => {
                   <div className="w-full border-t border-border/40" />
                 </div>
                 <div className="relative flex justify-center">
-                  <span className="bg-ai-bubble px-3 text-xs text-muted-foreground/50">oppure</span>
+                  <span className="bg-ai-bubble px-3 text-xs text-muted-foreground/50">{t("login_or")}</span>
                 </div>
               </div>
 
@@ -193,7 +194,7 @@ const LoginScreen = () => {
                 disabled={loading}
                 className="w-full text-center text-sm text-muted-foreground/60 italic py-2 transition-opacity disabled:opacity-50"
               >
-                Continua come ospite
+                {t("login_guest")}
               </button>
             </div>
           )}
@@ -204,7 +205,7 @@ const LoginScreen = () => {
                 type="email"
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); clearError(); }}
-                placeholder="la tua email"
+                placeholder={t("login_email_placeholder")}
                 autoFocus
                 className="w-full bg-transparent border-b border-trust-blue/40 text-foreground text-[15px] py-2 focus:outline-none focus:border-trust-blue placeholder:text-muted-foreground/50"
                 onKeyDown={(e) => e.key === "Enter" && handleEmailSubmit()}
@@ -214,13 +215,13 @@ const LoginScreen = () => {
                 disabled={loading || !email.trim()}
                 className="w-full bg-trust-blue text-primary-foreground rounded-xl py-3 text-[15px] font-medium transition-opacity disabled:opacity-50"
               >
-                {loading ? "Invio in corso..." : "Invia codice"}
+                {loading ? t("login_sending") : t("login_send_code")}
               </button>
               <button
                 onClick={() => { setStep("choose"); clearError(); }}
                 className="text-xs text-muted-foreground/60 italic"
               >
-                ← Indietro
+                {t("login_back")}
               </button>
             </div>
           )}
@@ -228,7 +229,7 @@ const LoginScreen = () => {
           {step === "otp" && (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Inserisci il codice a 6 cifre che hai ricevuto su {email}
+                {t("login_otp_instructions")} {email}
               </p>
               <input
                 type="text"
@@ -246,13 +247,13 @@ const LoginScreen = () => {
                 disabled={loading || otp.length < 6}
                 className="w-full bg-trust-blue text-primary-foreground rounded-xl py-3 text-[15px] font-medium transition-opacity disabled:opacity-50"
               >
-                {loading ? "Verifico..." : "Conferma"}
+                {loading ? t("login_verifying") : t("login_confirm")}
               </button>
               <button
                 onClick={() => { setStep("email"); setOtp(""); clearError(); }}
                 className="text-xs text-muted-foreground/60 italic"
               >
-                ← Cambia email
+                {t("login_change_email")}
               </button>
             </div>
           )}

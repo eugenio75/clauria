@@ -13,6 +13,7 @@ import LoginScreen from "../components/LoginScreen";
 import WelcomeScreen from "../components/WelcomeScreen";
 import { useIntusAuth } from "../hooks/useIntusAuth";
 import { useIntusContext } from "../hooks/useIntusContext";
+import { useLanguage } from "../i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -30,25 +31,6 @@ interface UserProfile {
   emotionalEntry: string;
   onboardingComplete: boolean;
 }
-
-const ONBOARDING_STEPS = [
-  {
-    aiMessage: "Come ti chiami?",
-    field: "name" as const,
-  },
-  {
-    aiMessageFn: (name: string) => `${name}, piacere. Quanti anni hai più o meno?`,
-    field: "ageRange" as const,
-  },
-  {
-    aiMessage: "E nella vita di tutti i giorni, cosa fai?\nLavori, sei in un momento di cambiamento, stai a casa...",
-    field: "lifeContext" as const,
-  },
-  {
-    aiMessageFn: (name: string) => `Capito, ${name}. E in questo momento — stai attraversando qualcosa di difficile, devi prendere una decisione importante, o c'è qualcosa dentro che vorresti capire meglio?`,
-    field: "emotionalEntry" as const,
-  },
-];
 
 const Index = () => {
   const [showSplash, setShowSplash] = useState(true);
@@ -71,7 +53,6 @@ const Index = () => {
   const [onboardingStep, setOnboardingStep] = useState(0);
   const [appPhase, setAppPhase] = useState<"splash" | "onboarding" | "conversation">("splash");
   const [isNewSession, setIsNewSession] = useState(true);
-  // Whether the user should skip login (returning user with profile, or fresh auth in this session)
   const [skipLogin, setSkipLogin] = useState(false);
   const [checkingProfile, setCheckingProfile] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -79,6 +60,14 @@ const Index = () => {
   const isGuest = !!user?.is_anonymous;
   const isAuthenticated = !!user;
   const { loadContext, saveProfile, resetContext } = useIntusContext();
+  const { t, lang } = useLanguage();
+
+  const ONBOARDING_STEPS = [
+    { aiMessage: t("onboarding_q1"), field: "name" as const },
+    { aiMessageFn: (name: string) => t("onboarding_q2")(name), field: "ageRange" as const },
+    { aiMessage: t("onboarding_q3"), field: "lifeContext" as const },
+    { aiMessageFn: (name: string) => t("onboarding_q4")(name), field: "emotionalEntry" as const },
+  ];
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
@@ -112,7 +101,7 @@ const Index = () => {
     setShowWelcome(false);
     setAppPhase("onboarding");
     setTimeout(() => addAIMessage(ONBOARDING_STEPS[0].aiMessage!), 500);
-  }, [addAIMessage]);
+  }, [addAIMessage, t]);
 
   const startConversation = useCallback(async () => {
     if (!user) return;
@@ -129,19 +118,14 @@ const Index = () => {
         });
         setAppPhase("conversation");
 
-        // Build contextual welcome using priority order
         let welcomeMsg: string;
         if (ctx.next_session_hook) {
-          // PRIORITY 1: Use exact hook from last session
           welcomeMsg = ctx.next_session_hook;
         } else if (ctx.step_proposed) {
-          // PRIORITY 2: Reference the step proposed
           welcomeMsg = `L'ultima volta avevi parlato di ${ctx.ongoing_situation || 'qualcosa di importante'} e avevi deciso di ${ctx.step_proposed}. Com'è andata?`;
         } else if ((ctx.recurring_theme_count || 0) >= 3) {
-          // PRIORITY 3: Persistent theme
           welcomeMsg = `Vedo che torniamo spesso su ${ctx.current_emotional_theme || 'questo tema'}. Invece di continuare a esplorarlo — vuoi provare qualcosa di concreto questa volta?`;
         } else if (ctx.session_count && ctx.session_count > 1 && ctx.ongoing_situation) {
-          // PRIORITY 4: Standard re-entry
           welcomeMsg = `Bentornato/a ${ctx.user_name}. L'ultima volta mi parlavi di ${ctx.ongoing_situation}. Come è andata?`;
         } else {
           welcomeMsg = `Ciao ${ctx.user_name}. Sono qui. Di cosa hai bisogno oggi?`;
@@ -163,7 +147,6 @@ const Index = () => {
     }, 400);
   }, []);
 
-  // When splash is done and user is authenticated, check if they have a profile (returning user)
   const hasCheckedRef = useRef(false);
   useEffect(() => {
     if (!showSplash && isReady && isAuthenticated && !hasCheckedRef.current) {
@@ -184,28 +167,21 @@ const Index = () => {
           });
           setAppPhase("conversation");
 
-          // Mark this tab as having an active session
           sessionStorage.setItem("intus_session_active", "true");
 
-          // Determine whether to show "Bentornato" or a neutral greeting
           const hoursSinceLast = ctx.last_session_at
             ? (Date.now() - new Date(ctx.last_session_at).getTime()) / (1000 * 60 * 60)
             : Infinity;
           const showBentornato = !isContinuingSession && hoursSinceLast >= 8;
 
-          // Build contextual welcome using priority order
           let welcomeMsg: string;
           if (showBentornato && ctx.next_session_hook) {
-            // PRIORITY 1: Use exact hook from last session
             welcomeMsg = ctx.next_session_hook;
           } else if (showBentornato && ctx.step_proposed) {
-            // PRIORITY 2: Reference the step proposed
             welcomeMsg = `L'ultima volta avevi parlato di ${ctx.ongoing_situation || 'qualcosa di importante'} e avevi deciso di ${ctx.step_proposed}. Com'è andata?`;
           } else if ((ctx.recurring_theme_count || 0) >= 3) {
-            // PRIORITY 3: Persistent theme
             welcomeMsg = `Vedo che torniamo spesso su ${ctx.current_emotional_theme || 'questo tema'}. Invece di continuare a esplorarlo — vuoi provare qualcosa di concreto questa volta?`;
           } else if (showBentornato && ctx.session_count && ctx.session_count > 1 && ctx.ongoing_situation) {
-            // PRIORITY 4: Standard re-entry
             welcomeMsg = `Bentornato/a ${ctx.user_name}. L'ultima volta mi parlavi di ${ctx.ongoing_situation}. Come è andata?`;
           } else {
             welcomeMsg = `Ciao ${ctx.user_name}. Sono qui. Di cosa hai bisogno oggi?`;
@@ -213,32 +189,24 @@ const Index = () => {
           setTimeout(() => addAIMessage(welcomeMsg), 500);
         }
       }).catch(() => {
-        // No profile — show login screen
       }).finally(() => {
         setCheckingProfile(false);
       });
     }
   }, [showSplash, isReady, isAuthenticated, user, loadContext, addAIMessage]);
 
-  // When user actively authenticates in THIS session (e.g. guest button or OTP),
-  // skip login and start conversation. Track the user id at mount time so we only
-  // react to *new* sign-ins, not stale sessions that were already there.
   const mountUserRef = useRef<string | undefined>(undefined);
   const didCaptureMount = useRef(false);
   useEffect(() => {
     if (!isReady) return;
-    // Capture the user id that was present at mount (stale session)
     if (!didCaptureMount.current) {
       didCaptureMount.current = true;
       mountUserRef.current = user?.id;
       return;
     }
-    // If user changed from what was at mount → this is a fresh auth action
     if (user && user.id !== mountUserRef.current) {
-      // Check if we need to migrate guest data
       const anonId = localStorage.getItem("intus_anon_id");
       if (anonId && anonId !== user.id && !user.is_anonymous) {
-        // Migrate guest data to new authenticated user
         supabase.functions.invoke("migrate-guest-data", {
           body: { anonUserId: anonId, newUserId: user.id },
         }).then(({ error }) => {
@@ -283,11 +251,11 @@ const Index = () => {
           userId: user.id,
           localHour: new Date().getHours(),
           isNewSession,
+          language: lang,
           ...(onboardingData ? { onboardingData } : {}),
         },
       });
 
-      // After first AI call, this is no longer a new session
       if (isNewSession) setIsNewSession(false);
 
       if (error) throw error;
@@ -313,14 +281,14 @@ const Index = () => {
     } catch (err) {
       console.error("AI error:", err);
       const errorMsg = err instanceof Error && err.message.includes("429")
-        ? "Ho bisogno di un momento. Riprova tra poco."
-        : "Sono qui. Qualcosa non ha funzionato — puoi riprovare?";
+        ? t("chat_error_rate_limit")
+        : t("chat_error_generic");
       setMessages((prev) => [
         ...prev,
         { id: Date.now().toString(), content: errorMsg, sender: "ai" },
       ]);
       if (err instanceof Error && err.message.includes("402")) {
-        toast.error("Crediti AI esauriti. Aggiungi fondi nelle impostazioni del workspace.");
+        toast.error(t("chat_error_credits"));
       }
     } finally {
       setIsTyping(false);
@@ -406,7 +374,6 @@ const Index = () => {
     return <SplashScreen onComplete={handleSplashComplete} fadingOut={splashFadingOut} />;
   }
 
-  // Wait until auth is fully restored before deciding which screen to show
   if (!isReady || checkingProfile) {
     return (
       <div className="fixed inset-0 bg-parchment flex items-center justify-center">
@@ -415,7 +382,6 @@ const Index = () => {
     );
   }
 
-  // Show login if: not authenticated, OR authenticated but no completed profile (stale session)
   if (!isAuthenticated || (!skipLogin && appPhase === "splash")) {
     return <LoginScreen />;
   }
@@ -447,26 +413,24 @@ const Index = () => {
         ))}
         {isTyping && <TypingIndicator />}
 
-        {/* Silence mode offer */}
         {silenceModeOffered && !silenceMode && (
           <div className="flex justify-center mt-2 mb-4">
             <button
               onClick={() => { setSilenceMode(true); setSilenceModeOffered(false); }}
-              className="text-sm text-trust-blue/60 italic underline-offset-2 underline"
+              className="text-sm text-trust-blue/80 italic underline-offset-2 underline font-medium"
             >
-              Sì, mi fermo un momento
+              {t("offer_silence")}
             </button>
           </div>
         )}
 
-        {/* Unsent letter offer */}
         {letterModeOffered && !letterMode && (
           <div className="flex justify-center mt-2 mb-4">
             <button
               onClick={() => { setLetterMode(true); setLetterModeOffered(false); }}
-              className="text-sm text-trust-blue/60 italic underline-offset-2 underline"
+              className="text-sm text-trust-blue/80 italic underline-offset-2 underline font-medium"
             >
-              Sì, voglio scrivere
+              {t("offer_letter")}
             </button>
           </div>
         )}

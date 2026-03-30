@@ -1,50 +1,57 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "../i18n/LanguageContext";
 
 interface WelcomeScreenProps {
   onComplete: () => void;
 }
 
-const LINES = [
-  { text: "Ciao. Sono CLAURIA.", fadeMs: 1200, waitMs: 2000 },
-  { text: "Sono qui per ascoltarti.", fadeMs: 1200, waitMs: 2000 },
-  { text: "Puoi dirmi quello che hai dentro:", fadeMs: 1200, waitMs: 1500 },
-  { text: "quello che ti turba,", fadeMs: 1000, waitMs: 1200 },
-  { text: "quello che non riesci a risolvere,", fadeMs: 1000, waitMs: 1200 },
-  { text: "quello che non hai ancora detto a nessuno.", fadeMs: 1000, waitMs: 2000 },
-  { text: "Anche di notte. Anche le cose più difficili.", fadeMs: 1200, waitMs: 2000 },
-];
-
 const WelcomeScreen = ({ onComplete }: WelcomeScreenProps) => {
-  const [visibleLines, setVisibleLines] = useState(0);
-  const [showCta, setShowCta] = useState(false);
+  const [page, setPage] = useState(0);
+  const { lang, setLang, t } = useLanguage();
 
-  useEffect(() => {
-    if (visibleLines === 0) {
-      // Initial delay before first sentence starts — ensures splash has fully faded
-      const timer = setTimeout(() => setVisibleLines(1), 600);
-      return () => clearTimeout(timer);
-    }
-    if (visibleLines > 0 && visibleLines <= LINES.length) {
-      if (visibleLines < LINES.length) {
-        const { fadeMs, waitMs } = LINES[visibleLines - 1];
-        const timer = setTimeout(() => setVisibleLines((v) => v + 1), fadeMs + waitMs);
-        return () => clearTimeout(timer);
-      } else {
-        const timer = setTimeout(() => setShowCta(true), 500);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [visibleLines]);
+  const pages = [
+    {
+      lines: [t("welcome_p1_l1"), t("welcome_p1_l2")],
+    },
+    {
+      lines: [t("welcome_p2")],
+    },
+    {
+      lines: [t("welcome_p3")],
+    },
+  ];
+
+  const isLastPage = page === pages.length - 1;
 
   return (
-    <motion.div
-      initial={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
-      className="fixed inset-0 bg-parchment flex flex-col items-center justify-center px-8"
-    >
-      <div className="max-w-[440px] w-full flex flex-col items-center text-center space-y-4">
+    <div className="fixed inset-0 bg-parchment flex flex-col items-center justify-center px-8">
+      {/* Language selector */}
+      <div className="absolute top-6 right-6 flex gap-2">
+        <button
+          onClick={() => setLang("it")}
+          className={`text-sm font-medium px-3 py-1.5 rounded-lg transition-colors ${
+            lang === "it"
+              ? "bg-trust-blue text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:bg-muted/80"
+          }`}
+        >
+          IT
+        </button>
+        <button
+          onClick={() => setLang("en")}
+          className={`text-sm font-medium px-3 py-1.5 rounded-lg transition-colors ${
+            lang === "en"
+              ? "bg-trust-blue text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:bg-muted/80"
+          }`}
+        >
+          EN
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="max-w-[440px] w-full flex flex-col items-center text-center space-y-4 min-h-[200px] justify-center">
         <motion.span
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -54,36 +61,58 @@ const WelcomeScreen = ({ onComplete }: WelcomeScreenProps) => {
           ✦
         </motion.span>
 
-        {LINES.map((line, i) => (
-          <AnimatePresence key={i}>
-            {i + 1 <= visibleLines && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: line.fadeMs / 1000, ease: "easeInOut" }}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={page}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="space-y-4"
+          >
+            {pages[page].lines.map((line, i) => (
+              <p
+                key={i}
                 className="text-foreground text-[1.15rem] leading-[2] font-display"
               >
-                {line.text}
-              </motion.p>
-            )}
-          </AnimatePresence>
+                {line}
+              </p>
+            ))}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Page indicator dots */}
+      <div className="fixed bottom-24 left-1/2 -translate-x-1/2 flex gap-2">
+        {pages.map((_, i) => (
+          <span
+            key={i}
+            className={`w-2 h-2 rounded-full transition-colors ${
+              i === page ? "bg-trust-blue" : "bg-muted-foreground/30"
+            }`}
+          />
         ))}
       </div>
 
-      <AnimatePresence>
-        {showCta && (
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1.5, ease: "easeInOut" }}
+      {/* Navigation button */}
+      <div className="fixed bottom-10 left-1/2 -translate-x-1/2">
+        {isLastPage ? (
+          <button
             onClick={onComplete}
-            className="fixed bottom-12 left-1/2 -translate-x-1/2 text-sm text-muted-foreground/60 italic font-display tracking-wide"
+            className="bg-trust-blue text-primary-foreground font-display text-base px-8 py-3 rounded-xl tracking-wide transition-opacity hover:opacity-90"
           >
-            Inizia
-          </motion.button>
+            {t("welcome_start")}
+          </button>
+        ) : (
+          <button
+            onClick={() => setPage((p) => p + 1)}
+            className="bg-trust-blue text-primary-foreground font-display text-base px-8 py-3 rounded-xl tracking-wide transition-opacity hover:opacity-90"
+          >
+            {t("welcome_next")}
+          </button>
         )}
-      </AnimatePresence>
-    </motion.div>
+      </div>
+    </div>
   );
 };
 

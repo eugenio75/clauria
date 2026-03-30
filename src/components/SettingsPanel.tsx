@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "../i18n/LanguageContext";
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ const SettingsPanel = ({ isOpen, onClose, userName, onNameChange, onResetMemory,
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(userName);
   const [showConfirm, setShowConfirm] = useState(false);
+  const { t } = useLanguage();
 
   return (
     <AnimatePresence>
@@ -38,7 +40,7 @@ const SettingsPanel = ({ isOpen, onClose, userName, onNameChange, onResetMemory,
           >
             <div className="p-6 pb-safe">
               <div className="flex items-center justify-between mb-8">
-                <h2 className="font-display text-xl text-foreground">Impostazioni</h2>
+                <h2 className="font-display text-xl text-foreground">{t("settings_title")}</h2>
                 <button onClick={onClose} className="text-muted-foreground">
                   <X className="w-5 h-5" />
                 </button>
@@ -47,7 +49,7 @@ const SettingsPanel = ({ isOpen, onClose, userName, onNameChange, onResetMemory,
               <div className="space-y-6">
                 {/* Name */}
                 <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider">Il tuo nome</label>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider">{t("settings_name_label")}</label>
                   {editingName ? (
                     <div className="flex items-center gap-2 mt-1">
                       <input
@@ -63,7 +65,7 @@ const SettingsPanel = ({ isOpen, onClose, userName, onNameChange, onResetMemory,
                         }}
                         className="text-trust-blue text-sm font-medium"
                       >
-                        Salva
+                        {t("settings_save")}
                       </button>
                     </div>
                   ) : (
@@ -80,7 +82,7 @@ const SettingsPanel = ({ isOpen, onClose, userName, onNameChange, onResetMemory,
                 <div>
                   {showConfirm ? (
                     <div className="space-y-2">
-                      <p className="text-sm text-foreground">Sei sicuro/a? Questo cancellerà tutto il contesto che CLAURIA ha di te.</p>
+                      <p className="text-sm text-foreground">{t("settings_reset_confirm")}</p>
                       <div className="flex gap-3">
                         <button
                           onClick={() => {
@@ -90,13 +92,13 @@ const SettingsPanel = ({ isOpen, onClose, userName, onNameChange, onResetMemory,
                           }}
                           className="text-crisis-red text-sm font-medium"
                         >
-                          Sì, azzera
+                          {t("settings_reset_yes")}
                         </button>
                         <button
                           onClick={() => setShowConfirm(false)}
                           className="text-muted-foreground text-sm"
                         >
-                          Annulla
+                          {t("settings_cancel")}
                         </button>
                       </div>
                     </div>
@@ -105,7 +107,7 @@ const SettingsPanel = ({ isOpen, onClose, userName, onNameChange, onResetMemory,
                       onClick={() => setShowConfirm(true)}
                       className="text-foreground/70 text-[15px]"
                     >
-                      Azzera la memoria
+                      {t("settings_reset")}
                     </button>
                   )}
                 </div>
@@ -114,20 +116,19 @@ const SettingsPanel = ({ isOpen, onClose, userName, onNameChange, onResetMemory,
                 <div>
                   <button
                     className="text-foreground/70 text-[15px]"
-                    onClick={() => {/* could expand inline */}}
+                    onClick={() => {}}
                   >
-                    Privacy
+                    {t("settings_privacy")}
                   </button>
                   <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                    CLAURIA non conserva mai le tue conversazioni. Memorizza solo un contesto sintetico 
-                    (stato emotivo, situazione) per offrirti continuità. Puoi cancellarlo in qualsiasi momento.
+                    {t("settings_privacy_text")}
                   </p>
                 </div>
 
                 {/* Support */}
                 <div>
                   <a href="mailto:supporto@intus.app" className="text-foreground/70 text-[15px]">
-                    Supporto
+                    {t("settings_support")}
                   </a>
                 </div>
 
@@ -145,7 +146,7 @@ const SettingsPanel = ({ isOpen, onClose, userName, onNameChange, onResetMemory,
                       }}
                       className="text-crisis-red text-[15px] font-medium"
                     >
-                      Esci dall'account
+                      {t("settings_logout")}
                     </button>
                   </div>
                 )}
