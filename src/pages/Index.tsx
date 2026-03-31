@@ -208,13 +208,33 @@ const Index = () => {
 
       const reentryAlreadyShown = sessionStorage.getItem("intus_reentry_shown") === "true";
 
+          // Helper: sanitize any context string to ensure no raw metadata leaks
+          const sanitizeHook = (s: string): string | null => {
+            if (!s) return null;
+            // Reject strings that look like raw metadata summaries
+            const metadataPatterns = /\b(developing|conflict|app-based|co-founder|evangelization|recurring_theme|session_count|emotional_theme|CONTEXT|UPDATE|MODE \d|PHASE \d)\b/i;
+            if (metadataPatterns.test(s)) return null;
+            // Reject strings with JSON-like patterns
+            if (s.includes('{') || s.includes('[') || s.includes(':')) return null;
+            return s;
+          };
+
           let welcomeMsg: string;
           if (!reentryAlreadyShown && showBentornato && ctx.next_session_hook) {
-            welcomeMsg = ctx.next_session_hook;
+            const safeHook = sanitizeHook(ctx.next_session_hook);
+            if (safeHook) {
+              welcomeMsg = safeHook;
+            } else {
+              welcomeMsg = `Bentornato/a ${ctx.user_name}. Come stai oggi?`;
+            }
             sessionStorage.setItem("intus_reentry_shown", "true");
           } else if (!reentryAlreadyShown && showBentornato && ctx.step_proposed) {
-            // Never expose raw context metadata — build a natural sentence
-            welcomeMsg = `Bentornato/a ${ctx.user_name}. L'ultima volta avevi deciso di ${ctx.step_proposed}. Com'è andata?`;
+            const safeStep = sanitizeHook(ctx.step_proposed);
+            if (safeStep) {
+              welcomeMsg = `Bentornato/a ${ctx.user_name}. L'ultima volta avevi deciso di ${safeStep}. Com'è andata?`;
+            } else {
+              welcomeMsg = `Bentornato/a ${ctx.user_name}. Come stai oggi?`;
+            }
             sessionStorage.setItem("intus_reentry_shown", "true");
           } else if (!reentryAlreadyShown && (ctx.recurring_theme_count || 0) >= 3) {
             welcomeMsg = `Ciao ${ctx.user_name}. Ultimamente parliamo spesso di qualcosa di simile. Vuoi provare un approccio diverso questa volta?`;
