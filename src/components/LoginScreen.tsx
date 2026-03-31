@@ -30,37 +30,8 @@ const LoginScreen = () => {
     }
   };
 
-  const handleGoogle = async () => {
-    setLoading(true);
-    clearError();
-    try {
-      const { error } = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
-      });
-      if (error) throw error;
-    } catch (err) {
-      console.error(err);
-      setInlineError(t("login_error_google"));
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handleApple = async () => {
-    setLoading(true);
-    clearError();
-    try {
-      const { error } = await lovable.auth.signInWithOAuth("apple", {
-        redirect_uri: window.location.origin,
-      });
-      if (error) throw error;
-    } catch (err) {
-      console.error(err);
-      setInlineError(t("login_error_apple"));
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   const handleEmailSubmit = async () => {
     if (!email.trim()) return;
