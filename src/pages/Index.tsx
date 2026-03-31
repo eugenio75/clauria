@@ -147,11 +147,22 @@ const Index = () => {
 
         let welcomeMsg: string;
         const reentryAlreadyShown = sessionStorage.getItem("intus_reentry_shown") === "true";
+        // Helper: reject raw metadata strings
+        const sanitizeHookInline = (s: string): string | null => {
+          if (!s) return null;
+          if (/\b(developing|conflict|app-based|co-founder|evangelization|recurring_theme|session_count|emotional_theme|CONTEXT|UPDATE|MODE \d|PHASE \d)\b/i.test(s)) return null;
+          if (s.includes('{') || s.includes('[') || s.includes(':')) return null;
+          return s;
+        };
         if (!reentryAlreadyShown && ctx.next_session_hook) {
-          welcomeMsg = ctx.next_session_hook;
+          const safeHook = sanitizeHookInline(ctx.next_session_hook);
+          welcomeMsg = safeHook || `Bentornato/a ${ctx.user_name}. Come stai oggi?`;
           sessionStorage.setItem("intus_reentry_shown", "true");
         } else if (!reentryAlreadyShown && ctx.step_proposed) {
-          welcomeMsg = `Bentornato/a ${ctx.user_name}. L'ultima volta avevi deciso di ${ctx.step_proposed}. Com'è andata?`;
+          const safeStep = sanitizeHookInline(ctx.step_proposed);
+          welcomeMsg = safeStep
+            ? `Bentornato/a ${ctx.user_name}. L'ultima volta avevi deciso di ${safeStep}. Com'è andata?`
+            : `Bentornato/a ${ctx.user_name}. Come stai oggi?`;
           sessionStorage.setItem("intus_reentry_shown", "true");
         } else if (!reentryAlreadyShown && (ctx.recurring_theme_count || 0) >= 3) {
           welcomeMsg = `Ciao ${ctx.user_name}. Ultimamente parliamo spesso di qualcosa di simile. Vuoi provare un approccio diverso questa volta?`;
