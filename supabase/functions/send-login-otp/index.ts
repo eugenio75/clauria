@@ -114,6 +114,7 @@ serve(async (req) => {
     });
 
     try {
+      console.log(`SMTP connecting to ${Deno.env.get("SMTP_HOST") || "smtp.hostinger.com"}:${Deno.env.get("SMTP_PORT") || "465"} as ${smtpUsername}`);
       await client.send({
         from: smtpFrom,
         to: email.trim(),
@@ -121,12 +122,17 @@ serve(async (req) => {
         content: "auto",
         html: getEmailHtml(code),
       });
+      console.log(`SMTP send successful to ${email}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
+      console.error(`SMTP send failed: ${message}`);
       if (message.includes("535") || message.toLowerCase().includes("authentication failed")) {
-        throw new Error("Autenticazione SMTP fallita. Verifica che l'utente SMTP sia l'indirizzo email completo della casella e che la password sia corretta.");
+        throw new Error("smtp_auth_failed");
       }
-      throw error;
+      if (message.toLowerCase().includes("connection") || message.toLowerCase().includes("timeout")) {
+        throw new Error("smtp_connection_failed");
+      }
+      throw new Error(`smtp_error: ${message}`);
     } finally {
       await client.close();
     }
@@ -138,8 +144,9 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("send-login-otp error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("send-login-otp error:", msg);
+    return new Response(JSON.stringify({ error: msg }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
