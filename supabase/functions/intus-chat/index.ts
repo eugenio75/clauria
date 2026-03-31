@@ -1848,13 +1848,14 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
       .replace(/CONTEXT[_ ]UPDATE[_ ]REQUIRED[^.]*.?\./gi, "")
       .replace(/\[?CONTEXT[_ ]UPDATE\]?/gi, "")
       .replace(/━+/g, "")
-      .replace(/^(MODE \d|SITUATION \d|ABSOLUTE RULE|CRITICAL|IMPORTANT|PHASE \d|PRIORITY \d|FORBIDDEN|THE FUNDAMENTAL|THE MIRROR|THE CLOSING|THE ONE QUESTION|CONVERSATION LENGTH|SPECIAL PERSONAL|RETURNING USER|SESSION CONTINUITY|FIRST RESPONSE|TONE ADAPTATION|COMMUNICATION STYLE|ANTI-INTERPRETATION|GOSPEL WISDOM|PRAYER|USER CONTEXT|YOUR CORE VALUES|LITURGICAL CONTEXT|NIGHT CONTEXT|SUMMARY RULE|STEP LADDER)[^\n]*\n?/gm, "")
+      .replace(/^(MODE \d|SITUATION \d|ABSOLUTE RULE|CRITICAL|IMPORTANT|PHASE \d|PRIORITY \d|FORBIDDEN|THE FUNDAMENTAL|THE MIRROR|THE CLOSING|THE ONE QUESTION|CONVERSATION LENGTH|SPECIAL PERSONAL|RETURNING USER|SESSION CONTINUITY|FIRST RESPONSE|TONE ADAPTATION|COMMUNICATION STYLE|ANTI-INTERPRETATION|GOSPEL WISDOM|PRAYER|USER CONTEXT|YOUR CORE VALUES|LITURGICAL CONTEXT|NIGHT CONTEXT|SUMMARY RULE|STEP LADDER|CASE [A-Z]|SIGNAL RECOGNITION|ADDITIONAL FIX|DISCERNMENT|PUSHING TOWARD|CRISIS PROTOCOL|SPECIAL MOMENTS)[^\n]*\n?/gm, "")
       .replace(/The user just corrected you[^.]*.?\./gi, "")
       .replace(/Adapt to what they said[^.]*.?\./gi, "")
       .replace(/\[.*?REQUIRED.*?\]/gi, "")
       .replace(/\[.*?INTERNAL.*?\]/gi, "")
       .replace(/^(WRONG|RIGHT)(\s*(approach|response))?:.*\n?/gim, "")
-      .replace(/^(IF |NEVER |ALWAYS |NOTE:|HOW TO USE|Example:)[^\n]*\n?/gm, "")
+      .replace(/^(IF |NEVER |ALWAYS |NOTE:|HOW TO USE|Example:|Signals:|Correct response:)[^\n]*\n?/gm, "")
+      .replace(/^(They mention|They use words|The tone is)[^\n]*\n?/gm, "")
       .replace(/\n{3,}/g, "\n\n")
       .trim();
 
