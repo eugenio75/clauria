@@ -83,6 +83,10 @@ const translations = {
     email_upgrade_success: "Ti abbiamo inviato un link magico. Controlla la mail.",
     email_upgrade_error: "Qualcosa non ha funzionato. Riprova.",
 
+    // Microphone
+    mic_start: "Tocca per parlare",
+    mic_stop: "Tocca per fermare",
+
     // Onboarding questions
     onboarding_q1: "Come ti chiami?",
     onboarding_q2: (name: string) => `${name}, piacere. Quanti anni hai più o meno?`,
@@ -170,6 +174,10 @@ const translations = {
     email_upgrade_skip: "Skip for now",
     email_upgrade_success: "We sent you a magic link. Check your email.",
     email_upgrade_error: "Something went wrong. Please try again.",
+
+    // Microphone
+    mic_start: "Tap to speak",
+    mic_stop: "Tap to stop",
 
     // Onboarding questions
     onboarding_q1: "What is your name?",
