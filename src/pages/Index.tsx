@@ -146,14 +146,16 @@ const Index = () => {
         setAppPhase("conversation");
 
         let welcomeMsg: string;
-        if (ctx.next_session_hook) {
+        const reentryAlreadyShown = sessionStorage.getItem("intus_reentry_shown") === "true";
+        if (!reentryAlreadyShown && ctx.next_session_hook) {
           welcomeMsg = ctx.next_session_hook;
-        } else if (ctx.step_proposed) {
-          welcomeMsg = `L'ultima volta avevi parlato di ${ctx.ongoing_situation || 'qualcosa di importante'} e avevi deciso di ${ctx.step_proposed}. Com'è andata?`;
-        } else if ((ctx.recurring_theme_count || 0) >= 3) {
-          welcomeMsg = `Vedo che torniamo spesso su ${ctx.current_emotional_theme || 'questo tema'}. Invece di continuare a esplorarlo — vuoi provare qualcosa di concreto questa volta?`;
-        } else if (ctx.session_count && ctx.session_count > 1 && ctx.ongoing_situation) {
-          welcomeMsg = `Bentornato/a ${ctx.user_name}. L'ultima volta mi parlavi di ${ctx.ongoing_situation}. Come è andata?`;
+          sessionStorage.setItem("intus_reentry_shown", "true");
+        } else if (!reentryAlreadyShown && ctx.step_proposed) {
+          welcomeMsg = `Bentornato/a ${ctx.user_name}. L'ultima volta avevi deciso di ${ctx.step_proposed}. Com'è andata?`;
+          sessionStorage.setItem("intus_reentry_shown", "true");
+        } else if (!reentryAlreadyShown && (ctx.recurring_theme_count || 0) >= 3) {
+          welcomeMsg = `Ciao ${ctx.user_name}. Ultimamente parliamo spesso di qualcosa di simile. Vuoi provare un approccio diverso questa volta?`;
+          sessionStorage.setItem("intus_reentry_shown", "true");
         } else {
           welcomeMsg = `Ciao ${ctx.user_name}. Sono qui. Di cosa hai bisogno oggi?`;
         }
@@ -204,15 +206,22 @@ const Index = () => {
             : Infinity;
           const showBentornato = !isContinuingSession && hoursSinceLast >= 8;
 
+      const reentryAlreadyShown = sessionStorage.getItem("intus_reentry_shown") === "true";
+
           let welcomeMsg: string;
-          if (showBentornato && ctx.next_session_hook) {
+          if (!reentryAlreadyShown && showBentornato && ctx.next_session_hook) {
             welcomeMsg = ctx.next_session_hook;
-          } else if (showBentornato && ctx.step_proposed) {
-            welcomeMsg = `L'ultima volta avevi parlato di ${ctx.ongoing_situation || 'qualcosa di importante'} e avevi deciso di ${ctx.step_proposed}. Com'è andata?`;
-          } else if ((ctx.recurring_theme_count || 0) >= 3) {
-            welcomeMsg = `Vedo che torniamo spesso su ${ctx.current_emotional_theme || 'questo tema'}. Invece di continuare a esplorarlo — vuoi provare qualcosa di concreto questa volta?`;
-          } else if (showBentornato && ctx.session_count && ctx.session_count > 1 && ctx.ongoing_situation) {
-            welcomeMsg = `Bentornato/a ${ctx.user_name}. L'ultima volta mi parlavi di ${ctx.ongoing_situation}. Come è andata?`;
+            sessionStorage.setItem("intus_reentry_shown", "true");
+          } else if (!reentryAlreadyShown && showBentornato && ctx.step_proposed) {
+            // Never expose raw context metadata — build a natural sentence
+            welcomeMsg = `Bentornato/a ${ctx.user_name}. L'ultima volta avevi deciso di ${ctx.step_proposed}. Com'è andata?`;
+            sessionStorage.setItem("intus_reentry_shown", "true");
+          } else if (!reentryAlreadyShown && (ctx.recurring_theme_count || 0) >= 3) {
+            welcomeMsg = `Ciao ${ctx.user_name}. Ultimamente parliamo spesso di qualcosa di simile. Vuoi provare un approccio diverso questa volta?`;
+            sessionStorage.setItem("intus_reentry_shown", "true");
+          } else if (!reentryAlreadyShown && showBentornato && ctx.session_count && ctx.session_count > 1 && ctx.ongoing_situation) {
+            welcomeMsg = `Bentornato/a ${ctx.user_name}. Come stai oggi?`;
+            sessionStorage.setItem("intus_reentry_shown", "true");
           } else {
             welcomeMsg = `Ciao ${ctx.user_name}. Sono qui. Di cosa hai bisogno oggi?`;
           }

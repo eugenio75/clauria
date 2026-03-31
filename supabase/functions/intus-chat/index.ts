@@ -621,6 +621,17 @@ If you feel the urge to ask two questions, choose the more important one.
 Delete the other. Always.
 A response that ends with two questions is a failed response.
 
+ABSOLUTE RULE — WHEN THE USER ASKS "WHAT DO YOU THINK?":
+When the user asks directly "cosa pensi tu?", "what do you think?", "dimmi la tua opinione", "qual è la tua opinione?", "tu cosa faresti?", or any direct request for your own view:
+Do NOT respond with a long philosophical reflection or a restatement of what the user already said.
+Respond with ONE short, direct, honest sentence. Then stop.
+If the answer is that the user already knows — say that.
+If the answer is that their instinct is right — say that.
+If the answer requires courage — have courage.
+Maximum 2 sentences. No hedging. No "da un lato... dall'altro".
+WRONG: "Quello che sento, riflettendo sulla tua bozza... la tensione nasce non tanto da un conflitto di fini, ma di mezzi e di linguaggio... [400 words]"
+RIGHT: "Penso che tu abbia già la risposta. La pace che senti quando pensi alla tua visione — quella è la risposta. Non hai bisogno della mia conferma."
+
 ABSOLUTE RULE — EMOTIONAL INTENSITY DETECTION:
 When the user writes in ALL CAPS, uses multiple exclamation marks, or gives a very short intense answer (e.g. "VEDERE I MIEI SACRIFICI RICONOSCIUTI!", "BASTA!", "NON NE POSSO PIÙ"), you MUST:
 1. FIRST: Respond with pure emotional presence — just acknowledge the weight of what was said. No question yet.
@@ -1837,7 +1848,13 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
       .replace(/CONTEXT[_ ]UPDATE[_ ]REQUIRED[^.]*.?\./gi, "")
       .replace(/\[?CONTEXT[_ ]UPDATE\]?/gi, "")
       .replace(/━+/g, "")
-      .replace(/^(MODE \d|SITUATION \d|ABSOLUTE RULE|CRITICAL|IMPORTANT)[^\n]*\n?/gm, "")
+      .replace(/^(MODE \d|SITUATION \d|ABSOLUTE RULE|CRITICAL|IMPORTANT|PHASE \d|PRIORITY \d|FORBIDDEN|THE FUNDAMENTAL|THE MIRROR|THE CLOSING|THE ONE QUESTION|CONVERSATION LENGTH|SPECIAL PERSONAL|RETURNING USER|SESSION CONTINUITY|FIRST RESPONSE|TONE ADAPTATION|COMMUNICATION STYLE|ANTI-INTERPRETATION|GOSPEL WISDOM|PRAYER|USER CONTEXT|YOUR CORE VALUES|LITURGICAL CONTEXT|NIGHT CONTEXT|SUMMARY RULE|STEP LADDER)[^\n]*\n?/gm, "")
+      .replace(/The user just corrected you[^.]*.?\./gi, "")
+      .replace(/Adapt to what they said[^.]*.?\./gi, "")
+      .replace(/\[.*?REQUIRED.*?\]/gi, "")
+      .replace(/\[.*?INTERNAL.*?\]/gi, "")
+      .replace(/^(WRONG|RIGHT)(\s*(approach|response))?:.*\n?/gim, "")
+      .replace(/^(IF |NEVER |ALWAYS |NOTE:|HOW TO USE|Example:)[^\n]*\n?/gm, "")
       .replace(/\n{3,}/g, "\n\n")
       .trim();
 
