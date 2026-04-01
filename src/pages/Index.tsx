@@ -35,7 +35,8 @@ interface UserProfile {
 const Index = () => {
   const [showSplash, setShowSplash] = useState(true);
   const [splashFadingOut, setSplashFadingOut] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
+  const welcomeAlreadySeen = localStorage.getItem("intus_welcome_seen") === "true";
+  const [showWelcome, setShowWelcome] = useState(!welcomeAlreadySeen);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -94,11 +95,6 @@ const Index = () => {
   }, []);
 
   const startOnboarding = useCallback(() => {
-    setShowWelcome(true);
-  }, []);
-
-  const handleWelcomeComplete = useCallback(() => {
-    setShowWelcome(false);
     // Check if profile already has required data — skip onboarding if so
     if (profile.name && profile.ageRange && profile.lifeContext) {
       setProfile(prev => ({ ...prev, onboardingComplete: true }));
@@ -116,10 +112,9 @@ const Index = () => {
         firstEmpty = i;
         break;
       }
-      if (i === fields.length - 1) firstEmpty = fields.length; // all filled
+      if (i === fields.length - 1) firstEmpty = fields.length;
     }
     if (firstEmpty >= ONBOARDING_STEPS.length) {
-      // All steps already filled, go to conversation
       setProfile(prev => ({ ...prev, onboardingComplete: true }));
       setAppPhase("conversation");
       return;
@@ -129,6 +124,11 @@ const Index = () => {
     const msg = step.aiMessageFn ? step.aiMessageFn(profile.name) : step.aiMessage!;
     setTimeout(() => addAIMessage(msg), 500);
   }, [addAIMessage, profile, ONBOARDING_STEPS]);
+
+  const handleWelcomeComplete = useCallback(() => {
+    localStorage.setItem("intus_welcome_seen", "true");
+    setShowWelcome(false);
+  }, []);
 
   const startConversation = useCallback(async () => {
     if (!user) return;
@@ -447,6 +447,7 @@ const Index = () => {
     setOnboardingStep(0);
     hasCheckedRef.current = false;
     setSkipLogin(false);
+    localStorage.removeItem("intus_welcome_seen");
     setShowWelcome(true);
   };
 
@@ -463,12 +464,12 @@ const Index = () => {
     );
   }
 
-  if (!isAuthenticated || (!skipLogin && appPhase === "splash")) {
-    return <LoginScreen />;
-  }
-
   if (showWelcome) {
     return <WelcomeScreen onComplete={handleWelcomeComplete} />;
+  }
+
+  if (!isAuthenticated || (!skipLogin && appPhase === "splash")) {
+    return <LoginScreen />;
   }
 
   return (
