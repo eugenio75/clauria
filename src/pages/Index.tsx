@@ -35,7 +35,8 @@ interface UserProfile {
 const Index = () => {
   const [showSplash, setShowSplash] = useState(true);
   const [splashFadingOut, setSplashFadingOut] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
+  const welcomeAlreadySeen = localStorage.getItem("intus_welcome_seen") === "true";
+  const [showWelcome, setShowWelcome] = useState(!welcomeAlreadySeen);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
