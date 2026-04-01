@@ -89,7 +89,7 @@ const translations = {
 
     // Onboarding questions
     onboarding_q1: "Come ti chiami?",
-    onboarding_q2: (name: string) => `${name}, piacere. Quanti anni hai più o meno?`,
+    onboarding_q2: (name: string) => `${name}, piacere. Quanti anni hai?`,
     onboarding_q3: "E nella vita di tutti i giorni, cosa fai?\nLavori, sei in un momento di cambiamento, stai a casa...",
     onboarding_q4: (name: string) => `Capito, ${name}. E in questo momento — stai attraversando qualcosa di difficile, devi prendere una decisione importante, o c'è qualcosa dentro che vorresti capire meglio?`,
   },
@@ -181,7 +181,7 @@ const translations = {
 
     // Onboarding questions
     onboarding_q1: "What is your name?",
-    onboarding_q2: (name: string) => `${name}, nice to meet you. How old are you, roughly?`,
+    onboarding_q2: (name: string) => `${name}, nice to meet you. How old are you?`,
     onboarding_q3: "And in your daily life, what do you do?\nWork, going through a transition, staying at home...",
     onboarding_q4: (name: string) => `Got it, ${name}. Right now — are you going through something difficult, facing an important decision, or is there something inside you'd like to understand better?`,
   },
