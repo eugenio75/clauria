@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1";
 import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
@@ -8,16 +7,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-function generateOTP(): string {
-  const digits = "0123456789";
-  let otp = "";
-  for (let i = 0; i < 6; i++) {
-    otp += digits[Math.floor(Math.random() * 10)];
-  }
-  return otp;
-}
-
-function getEmailHtml(code: string): string {
+function getWelcomeHtml(name?: string): string {
+  const greeting = name ? `Ciao ${name}` : "Ciao";
   return `<!DOCTYPE html>
 <html lang="it">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -36,24 +27,42 @@ function getEmailHtml(code: string): string {
           <p style="margin:0;font-size:13px;color:#9ca3af;font-style:italic;">Non sei solo.</p>
         </td></tr>
 
-        <!-- Greeting -->
-        <tr><td align="center" style="padding-bottom:8px;">
-          <p style="margin:0;font-size:16px;color:#374151;line-height:1.6;">Ciao 👋</p>
+        <!-- Welcome message -->
+        <tr><td style="padding-bottom:16px;">
+          <p style="margin:0;font-size:18px;color:#1f2937;line-height:1.6;font-weight:500;">${greeting} ✨</p>
         </td></tr>
-        <tr><td align="center" style="padding-bottom:24px;">
-          <p style="margin:0;font-size:15px;color:#6b7280;line-height:1.7;">Ecco il tuo codice di accesso a Clauria:</p>
+        <tr><td style="padding-bottom:20px;">
+          <p style="margin:0;font-size:15px;color:#4b5563;line-height:1.8;">
+            Benvenuto/a in Clauria — il tuo spazio sicuro per parlare di quello che hai dentro, 
+            senza giudizio, senza fretta.
+          </p>
+        </td></tr>
+        <tr><td style="padding-bottom:20px;">
+          <p style="margin:0;font-size:15px;color:#4b5563;line-height:1.8;">
+            Clauria è qui per ascoltarti. Puoi parlarle di qualsiasi cosa: 
+            un pensiero che non riesci a toglierti dalla testa, una decisione difficile, 
+            un'emozione che non sai come gestire. Anche le cose più piccole contano.
+          </p>
+        </td></tr>
+        <tr><td style="padding-bottom:28px;">
+          <p style="margin:0;font-size:15px;color:#4b5563;line-height:1.8;">
+            Non conserviamo le tue conversazioni — solo un contesto sintetico per offrirti continuità. 
+            La tua privacy è sacra.
+          </p>
         </td></tr>
 
-        <!-- OTP Code -->
-        <tr><td align="center" style="padding-bottom:24px;">
-          <div style="font-size:36px;letter-spacing:10px;font-family:'Courier New',monospace;font-weight:700;color:#1f2937;background-color:#f0f4f8;border-radius:12px;padding:20px 32px;display:inline-block;border:2px solid #e5e7eb;">
-            ${code}
-          </div>
-        </td></tr>
-
-        <!-- Validity -->
+        <!-- CTA Button -->
         <tr><td align="center" style="padding-bottom:32px;">
-          <p style="margin:0;font-size:14px;color:#4478a6;font-weight:500;">⏱ Valido per 10 minuti</p>
+          <a href="https://clauria.azarlabs.com" style="display:inline-block;background-color:#4478a6;color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;padding:14px 36px;border-radius:12px;">
+            Inizia ora →
+          </a>
+        </td></tr>
+
+        <!-- Warm closing -->
+        <tr><td style="padding-bottom:24px;">
+          <p style="margin:0;font-size:14px;color:#6b7280;line-height:1.7;font-style:italic;">
+            Quando vuoi, sono qui. Non c'è un momento giusto o sbagliato per parlare.
+          </p>
         </td></tr>
 
         <!-- Divider -->
@@ -61,16 +70,8 @@ function getEmailHtml(code: string): string {
           <div style="height:1px;background-color:#e5e7eb;"></div>
         </td></tr>
 
-        <!-- Security note -->
-        <tr><td align="center" style="padding-bottom:8px;">
-          <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">
-            🔒 Se non hai richiesto questo codice, puoi ignorare questa email.<br>
-            Il tuo account è al sicuro.
-          </p>
-        </td></tr>
-
         <!-- Footer -->
-        <tr><td align="center" style="padding-top:24px;">
+        <tr><td align="center">
           <p style="margin:0;font-size:11px;color:#d1d5db;line-height:1.6;">
             © 2026 Clauria · <a href="https://clauria.azarlabs.com" style="color:#d1d5db;text-decoration:none;">clauria.azarlabs.com</a><br>
             <a href="https://clauria.azarlabs.com/privacy" style="color:#d1d5db;text-decoration:none;">Privacy Policy</a>
@@ -89,7 +90,7 @@ serve(async (req) => {
   }
 
   try {
-    const { email } = await req.json();
+    const { email, name } = await req.json();
     if (!email || typeof email !== "string") {
       return new Response(JSON.stringify({ error: "Email richiesta" }), {
         status: 400,
@@ -97,30 +98,6 @@ serve(async (req) => {
       });
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    const code = generateOTP();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-
-    // Invalidate old codes
-    await supabase
-      .from("otp_codes")
-      .update({ used: true })
-      .eq("email", email.trim().toLowerCase())
-      .eq("used", false);
-
-    // Store new code
-    const { error: insertError } = await supabase.from("otp_codes").insert({
-      email: email.trim().toLowerCase(),
-      code,
-      expires_at: expiresAt,
-    });
-
-    if (insertError) throw insertError;
-
-    // Send via SMTP
     const smtpFrom = Deno.env.get("SMTP_FROM") || "Clauria <noreply@tenks.co>";
     const smtpUsername = (Deno.env.get("SMTP_USERNAME") || "").trim().toLowerCase();
     const smtpPassword = Deno.env.get("SMTP_PASSWORD") || "";
@@ -142,21 +119,11 @@ serve(async (req) => {
       await client.send({
         from: smtpFrom,
         to: email.trim(),
-        subject: "Il tuo codice di accesso Clauria",
+        subject: "Benvenuto/a in Clauria ✨",
         content: "auto",
-        html: getEmailHtml(code),
+        html: getWelcomeHtml(name),
       });
-      console.log(`OTP sent to ${email}`);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      console.error(`SMTP send failed: ${message}`);
-      if (message.includes("535") || message.toLowerCase().includes("authentication failed")) {
-        throw new Error("smtp_auth_failed");
-      }
-      if (message.toLowerCase().includes("connection") || message.toLowerCase().includes("timeout")) {
-        throw new Error("smtp_connection_failed");
-      }
-      throw new Error(`smtp_error: ${message}`);
+      console.log(`Welcome email sent to ${email}`);
     } finally {
       await client.close();
     }
@@ -167,7 +134,7 @@ serve(async (req) => {
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    console.error("send-login-otp error:", msg);
+    console.error("send-welcome-email error:", msg);
     return new Response(JSON.stringify({ error: msg }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
