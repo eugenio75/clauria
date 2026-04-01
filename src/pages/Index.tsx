@@ -463,12 +463,12 @@ const Index = () => {
     );
   }
 
-  if (!isAuthenticated || (!skipLogin && appPhase === "splash")) {
-    return <LoginScreen />;
-  }
-
   if (showWelcome) {
     return <WelcomeScreen onComplete={handleWelcomeComplete} />;
+  }
+
+  if (!isAuthenticated || (!skipLogin && appPhase === "splash")) {
+    return <LoginScreen />;
   }
 
   return (
