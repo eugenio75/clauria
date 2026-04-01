@@ -68,10 +68,19 @@ const LoginScreen = () => {
           type: "magiclink",
         });
         if (verifyError) throw verifyError;
+
+        // Send welcome email for new users (fire and forget)
+        if (data?.isNewUser) {
+          supabase.functions.invoke("send-welcome-email", {
+            body: { email: email.trim() },
+          }).catch(() => {});
+        }
       }
     } catch (err) {
       console.error(err);
       const msg = err instanceof Error && err.message.includes("non valido")
+        ? t("login_error_otp_invalid")
+        : err instanceof Error && err.message.includes("scaduto")
         ? t("login_error_otp_invalid")
         : t("login_error_generic");
       setInlineError(msg);
