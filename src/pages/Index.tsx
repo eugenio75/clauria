@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { getWarmReaction } from "../utils/onboardingWarmReaction";
 import { AnimatePresence } from "framer-motion";
 import { MoreHorizontal } from "lucide-react";
 import MessageBubble from "../components/MessageBubble";
@@ -68,14 +69,14 @@ const Index = () => {
     { aiMessage: t("onboarding_q1"), field: "name" as const },
     { aiMessageFn: (name: string) => t("onboarding_q2")(name), field: "ageRange" as const },
     { aiMessage: t("onboarding_q3"), field: "lifeContext" as const },
-    { aiMessageFn: (name: string) => t("onboarding_q4")(name), field: "emotionalEntry" as const },
+    { field: "emotionalEntry" as const, dynamic: true },
   ]);
   // Update steps when language changes
   onboardingStepsRef.current = [
     { aiMessage: t("onboarding_q1"), field: "name" as const },
     { aiMessageFn: (name: string) => t("onboarding_q2")(name), field: "ageRange" as const },
     { aiMessage: t("onboarding_q3"), field: "lifeContext" as const },
-    { aiMessageFn: (name: string) => t("onboarding_q4")(name), field: "emotionalEntry" as const },
+    { field: "emotionalEntry" as const, dynamic: true },
   ];
   const ONBOARDING_STEPS = onboardingStepsRef.current;
 
@@ -134,7 +135,14 @@ const Index = () => {
     }
     setOnboardingStep(firstEmpty);
     const step = ONBOARDING_STEPS[firstEmpty];
-    const msg = step.aiMessageFn ? step.aiMessageFn(profile.name) : step.aiMessage!;
+    let msg: string;
+    if (step.dynamic) {
+      const warmReaction = getWarmReaction(profile.lifeContext, lang);
+      const fixedQuestion = t("onboarding_q4_question");
+      msg = `${warmReaction}\n\n${fixedQuestion}`;
+    } else {
+      msg = step.aiMessageFn ? step.aiMessageFn(profile.name) : step.aiMessage!;
+    }
     setTimeout(() => addAIMessage(msg), 500);
   }, [addAIMessage, profile, ONBOARDING_STEPS]);
 
@@ -415,7 +423,15 @@ const Index = () => {
     if (nextStep < ONBOARDING_STEPS.length) {
       setOnboardingStep(nextStep);
       const next = ONBOARDING_STEPS[nextStep];
-      const msg = next.aiMessageFn ? next.aiMessageFn(newProfile.name) : next.aiMessage!;
+      let msg: string;
+      if (next.dynamic) {
+        // Q4: warm reaction to life context + fixed question
+        const warmReaction = getWarmReaction(text, lang);
+        const fixedQuestion = t("onboarding_q4_question");
+        msg = `${warmReaction}\n\n${fixedQuestion}`;
+      } else {
+        msg = next.aiMessageFn ? next.aiMessageFn(newProfile.name) : next.aiMessage!;
+      }
       addAIMessage(msg);
     } else {
       const finalProfile = { ...newProfile, onboardingComplete: true };
