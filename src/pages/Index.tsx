@@ -375,22 +375,24 @@ const Index = () => {
 
       if (error) throw error;
 
+      const cleanedText = cleanAIText(data.text);
+
       if (data.isCrisisLevel3) {
         setMessages((prev) => [
           ...prev,
-          { id: Date.now().toString(), content: data.text, sender: "ai", crisis: true },
+          { id: Date.now().toString(), content: cleanedText, sender: "ai", crisis: true },
         ]);
       } else {
         setMessages((prev) => [
           ...prev,
-          { id: Date.now().toString(), content: data.text, sender: "ai" },
+          { id: Date.now().toString(), content: cleanedText, sender: "ai" },
         ]);
       }
 
-      if (data.text.includes("fermarci un momento in silenzio")) {
+      if (cleanedText.includes("fermarci un momento in silenzio")) {
         setSilenceModeOffered(true);
       }
-      if (data.text.includes("Non la leggerà nessuno")) {
+      if (cleanedText.includes("Non la leggerà nessuno")) {
         setLetterModeOffered(true);
       }
     } catch (err) {
