@@ -255,6 +255,10 @@ const Index = () => {
             return s;
           };
 
+          // Guard: only one greeting per session
+          if (greetingSentRef.current) return;
+          greetingSentRef.current = true;
+
           let welcomeMsg: string;
           if (!reentryAlreadyShown && showBentornato && ctx.next_session_hook) {
             const safeHook = sanitizeHook(ctx.next_session_hook);
