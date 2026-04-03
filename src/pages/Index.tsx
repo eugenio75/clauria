@@ -416,7 +416,15 @@ const Index = () => {
     if (nextStep < ONBOARDING_STEPS.length) {
       setOnboardingStep(nextStep);
       const next = ONBOARDING_STEPS[nextStep];
-      const msg = next.aiMessageFn ? next.aiMessageFn(newProfile.name) : next.aiMessage!;
+      let msg: string;
+      if (next.dynamic) {
+        // Q4: warm reaction to life context + fixed question
+        const warmReaction = getWarmReaction(text, lang);
+        const fixedQuestion = t("onboarding_q4_question");
+        msg = `${warmReaction}\n\n${fixedQuestion}`;
+      } else {
+        msg = next.aiMessageFn ? next.aiMessageFn(newProfile.name) : next.aiMessage!;
+      }
       addAIMessage(msg);
     } else {
       const finalProfile = { ...newProfile, onboardingComplete: true };
