@@ -69,14 +69,14 @@ const Index = () => {
     { aiMessage: t("onboarding_q1"), field: "name" as const },
     { aiMessageFn: (name: string) => t("onboarding_q2")(name), field: "ageRange" as const },
     { aiMessage: t("onboarding_q3"), field: "lifeContext" as const },
-    { aiMessageFn: (name: string) => t("onboarding_q4")(name), field: "emotionalEntry" as const },
+    { field: "emotionalEntry" as const, dynamic: true },
   ]);
   // Update steps when language changes
   onboardingStepsRef.current = [
     { aiMessage: t("onboarding_q1"), field: "name" as const },
     { aiMessageFn: (name: string) => t("onboarding_q2")(name), field: "ageRange" as const },
     { aiMessage: t("onboarding_q3"), field: "lifeContext" as const },
-    { aiMessageFn: (name: string) => t("onboarding_q4")(name), field: "emotionalEntry" as const },
+    { field: "emotionalEntry" as const, dynamic: true },
   ];
   const ONBOARDING_STEPS = onboardingStepsRef.current;
 
