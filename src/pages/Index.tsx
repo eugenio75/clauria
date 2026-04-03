@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { getWarmReaction } from "../utils/onboardingWarmReaction";
 import { AnimatePresence } from "framer-motion";
 import { MoreHorizontal } from "lucide-react";
 import MessageBubble from "../components/MessageBubble";
