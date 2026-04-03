@@ -104,6 +104,10 @@ const Index = () => {
   }, []);
 
   const startOnboarding = useCallback(() => {
+    // Guard: prevent calling startOnboarding more than once
+    if (onboardingStartedRef.current) return;
+    onboardingStartedRef.current = true;
+
     // Check if profile already has required data — skip onboarding if so
     if (profile.name && profile.ageRange && profile.lifeContext) {
       setProfile(prev => ({ ...prev, onboardingComplete: true }));
