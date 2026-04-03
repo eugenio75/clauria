@@ -460,6 +460,7 @@ const Index = () => {
     setMessages([]);
     setOnboardingStep(0);
     hasCheckedRef.current = false;
+    onboardingStartedRef.current = false;
     setSkipLogin(false);
     localStorage.removeItem("intus_welcome_seen");
     setShowWelcome(true);
