@@ -91,7 +91,7 @@ const translations = {
     onboarding_q1: "Come ti chiami?",
     onboarding_q2: (name: string) => `${name}, piacere. Quanti anni hai?`,
     onboarding_q3: "E nella vita di tutti i giorni, cosa fai?\nLavori, sei in un momento di cambiamento, stai a casa...",
-    onboarding_q4: (name: string) => `Capito, ${name}. E in questo momento — stai attraversando qualcosa di difficile, hai una decisione da prendere, c'è qualcosa che vorresti capire meglio — o magari c'è qualcosa di bello che vuoi condividere o approfondire?`,
+    onboarding_q4_question: "E in questo momento — c'è qualcosa che ti turba, una decisione da prendere, o magari qualcosa di bello che vuoi condividere?",
   },
   en: {
     // Splash
