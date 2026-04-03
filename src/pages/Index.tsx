@@ -55,6 +55,7 @@ const Index = () => {
   });
   const [onboardingStep, setOnboardingStep] = useState(0);
   const onboardingStartedRef = useRef(false);
+  const greetingSentRef = useRef(false);
   const [appPhase, setAppPhase] = useState<"splash" | "onboarding" | "conversation">("splash");
   const [isNewSession, setIsNewSession] = useState(true);
   const [skipLogin, setSkipLogin] = useState(false);
