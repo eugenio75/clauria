@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { getWarmReaction } from "../utils/onboardingWarmReaction";
+import { cleanAIText } from "../utils/cleanAIText";
 import { AnimatePresence } from "framer-motion";
 import { MoreHorizontal } from "lucide-react";
 import MessageBubble from "../components/MessageBubble";
@@ -54,6 +55,7 @@ const Index = () => {
   });
   const [onboardingStep, setOnboardingStep] = useState(0);
   const onboardingStartedRef = useRef(false);
+  const greetingSentRef = useRef(false);
   const [appPhase, setAppPhase] = useState<"splash" | "onboarding" | "conversation">("splash");
   const [isNewSession, setIsNewSession] = useState(true);
   const [skipLogin, setSkipLogin] = useState(false);
@@ -87,18 +89,20 @@ const Index = () => {
   }, []);
 
   const addAIMessage = useCallback((content: string, crisis?: boolean) => {
+    const cleaned = cleanAIText(content);
+    if (!cleaned) return;
     setIsTyping(true);
     setTimeout(() => {
       setIsTyping(false);
       setMessages((prev) => [
         ...prev,
-        { id: Date.now().toString(), content, sender: "ai", crisis },
+        { id: Date.now().toString(), content: cleaned, sender: "ai", crisis },
       ]);
 
-      if (content.includes("fermarci un momento in silenzio")) {
+      if (cleaned.includes("fermarci un momento in silenzio")) {
         setSilenceModeOffered(true);
       }
-      if (content.includes("Non la leggerà nessuno")) {
+      if (cleaned.includes("Non la leggerà nessuno")) {
         setLetterModeOffered(true);
       }
     }, 300);
@@ -165,6 +169,10 @@ const Index = () => {
           onboardingComplete: true,
         });
         setAppPhase("conversation");
+
+        // Guard: only one greeting per session
+        if (greetingSentRef.current) return;
+        greetingSentRef.current = true;
 
         let welcomeMsg: string;
         const reentryAlreadyShown = sessionStorage.getItem("intus_reentry_shown") === "true";
@@ -250,6 +258,10 @@ const Index = () => {
             if (s.includes('{') || s.includes('[') || s.includes(':')) return null;
             return s;
           };
+
+          // Guard: only one greeting per session
+          if (greetingSentRef.current) return;
+          greetingSentRef.current = true;
 
           let welcomeMsg: string;
           if (!reentryAlreadyShown && showBentornato && ctx.next_session_hook) {
@@ -363,22 +375,24 @@ const Index = () => {
 
       if (error) throw error;
 
+      const cleanedText = cleanAIText(data.text);
+
       if (data.isCrisisLevel3) {
         setMessages((prev) => [
           ...prev,
-          { id: Date.now().toString(), content: data.text, sender: "ai", crisis: true },
+          { id: Date.now().toString(), content: cleanedText, sender: "ai", crisis: true },
         ]);
       } else {
         setMessages((prev) => [
           ...prev,
-          { id: Date.now().toString(), content: data.text, sender: "ai" },
+          { id: Date.now().toString(), content: cleanedText, sender: "ai" },
         ]);
       }
 
-      if (data.text.includes("fermarci un momento in silenzio")) {
+      if (cleanedText.includes("fermarci un momento in silenzio")) {
         setSilenceModeOffered(true);
       }
-      if (data.text.includes("Non la leggerà nessuno")) {
+      if (cleanedText.includes("Non la leggerà nessuno")) {
         setLetterModeOffered(true);
       }
     } catch (err) {
@@ -477,6 +491,7 @@ const Index = () => {
     setOnboardingStep(0);
     hasCheckedRef.current = false;
     onboardingStartedRef.current = false;
+    greetingSentRef.current = false;
     setSkipLogin(false);
     localStorage.removeItem("intus_welcome_seen");
     setShowWelcome(true);
