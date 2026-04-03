@@ -183,7 +183,7 @@ const translations = {
     onboarding_q1: "What is your name?",
     onboarding_q2: (name: string) => `${name}, nice to meet you. How old are you?`,
     onboarding_q3: "And in your daily life, what do you do?\nWork, going through a transition, staying at home...",
-    onboarding_q4: (name: string) => `Got it, ${name}. Right now — are you going through something difficult, do you need to make a decision, is there something you would like to understand better — or perhaps something beautiful you want to share or explore?`,
+    onboarding_q4_question: "And right now — is there something troubling you, a decision to make, or perhaps something beautiful you want to share?",
   },
 } as const;
 
