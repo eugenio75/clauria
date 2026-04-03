@@ -170,6 +170,10 @@ const Index = () => {
         });
         setAppPhase("conversation");
 
+        // Guard: only one greeting per session
+        if (greetingSentRef.current) return;
+        greetingSentRef.current = true;
+
         let welcomeMsg: string;
         const reentryAlreadyShown = sessionStorage.getItem("intus_reentry_shown") === "true";
         // Helper: reject raw metadata strings
