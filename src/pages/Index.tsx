@@ -89,18 +89,20 @@ const Index = () => {
   }, []);
 
   const addAIMessage = useCallback((content: string, crisis?: boolean) => {
+    const cleaned = cleanAIText(content);
+    if (!cleaned) return;
     setIsTyping(true);
     setTimeout(() => {
       setIsTyping(false);
       setMessages((prev) => [
         ...prev,
-        { id: Date.now().toString(), content, sender: "ai", crisis },
+        { id: Date.now().toString(), content: cleaned, sender: "ai", crisis },
       ]);
 
-      if (content.includes("fermarci un momento in silenzio")) {
+      if (cleaned.includes("fermarci un momento in silenzio")) {
         setSilenceModeOffered(true);
       }
-      if (content.includes("Non la leggerà nessuno")) {
+      if (cleaned.includes("Non la leggerà nessuno")) {
         setLetterModeOffered(true);
       }
     }, 300);
