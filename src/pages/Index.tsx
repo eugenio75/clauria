@@ -63,12 +63,20 @@ const Index = () => {
   const { loadContext, saveProfile, resetContext } = useIntusContext();
   const { t, lang } = useLanguage();
 
-  const ONBOARDING_STEPS = [
+  const onboardingStepsRef = useRef([
+    { aiMessage: t("onboarding_q1"), field: "name" as const },
+    { aiMessageFn: (name: string) => t("onboarding_q2")(name), field: "ageRange" as const },
+    { aiMessage: t("onboarding_q3"), field: "lifeContext" as const },
+    { aiMessageFn: (name: string) => t("onboarding_q4")(name), field: "emotionalEntry" as const },
+  ]);
+  // Update steps when language changes
+  onboardingStepsRef.current = [
     { aiMessage: t("onboarding_q1"), field: "name" as const },
     { aiMessageFn: (name: string) => t("onboarding_q2")(name), field: "ageRange" as const },
     { aiMessage: t("onboarding_q3"), field: "lifeContext" as const },
     { aiMessageFn: (name: string) => t("onboarding_q4")(name), field: "emotionalEntry" as const },
   ];
+  const ONBOARDING_STEPS = onboardingStepsRef.current;
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
