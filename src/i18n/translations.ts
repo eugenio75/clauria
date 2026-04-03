@@ -8,7 +8,7 @@ const translations = {
     // Welcome pages
     welcome_p1_l1: "Ciao. Sono Clauria.",
     welcome_p1_l2: "Sono qui per ascoltarti.",
-    welcome_p2: "Puoi dirmi quello che ti turba, quello che non riesci a risolvere, quello che non hai ancora detto a nessuno. Ma anche quello che ti rende felice e quello che vorresti condividere con gioia.",
+    welcome_p2: "Puoi dirmi quello che ti turba, ciò che non riesci a risolvere, quello che tieni dentro. Ma anche le gioie che vorresti condividere.",
     welcome_p3: "Anche di notte. Anche nelle cose più difficili. Anche in quelle più belle.",
     welcome_next: "Avanti",
     welcome_start: "Inizia",
