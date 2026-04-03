@@ -135,7 +135,14 @@ const Index = () => {
     }
     setOnboardingStep(firstEmpty);
     const step = ONBOARDING_STEPS[firstEmpty];
-    const msg = step.aiMessageFn ? step.aiMessageFn(profile.name) : step.aiMessage!;
+    let msg: string;
+    if (step.dynamic) {
+      const warmReaction = getWarmReaction(profile.lifeContext, lang);
+      const fixedQuestion = t("onboarding_q4_question");
+      msg = `${warmReaction}\n\n${fixedQuestion}`;
+    } else {
+      msg = step.aiMessageFn ? step.aiMessageFn(profile.name) : step.aiMessage!;
+    }
     setTimeout(() => addAIMessage(msg), 500);
   }, [addAIMessage, profile, ONBOARDING_STEPS]);
 
