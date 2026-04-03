@@ -52,6 +52,7 @@ const Index = () => {
     onboardingComplete: false,
   });
   const [onboardingStep, setOnboardingStep] = useState(0);
+  const onboardingStartedRef = useRef(false);
   const [appPhase, setAppPhase] = useState<"splash" | "onboarding" | "conversation">("splash");
   const [isNewSession, setIsNewSession] = useState(true);
   const [skipLogin, setSkipLogin] = useState(false);
@@ -63,12 +64,20 @@ const Index = () => {
   const { loadContext, saveProfile, resetContext } = useIntusContext();
   const { t, lang } = useLanguage();
 
-  const ONBOARDING_STEPS = [
+  const onboardingStepsRef = useRef([
+    { aiMessage: t("onboarding_q1"), field: "name" as const },
+    { aiMessageFn: (name: string) => t("onboarding_q2")(name), field: "ageRange" as const },
+    { aiMessage: t("onboarding_q3"), field: "lifeContext" as const },
+    { aiMessageFn: (name: string) => t("onboarding_q4")(name), field: "emotionalEntry" as const },
+  ]);
+  // Update steps when language changes
+  onboardingStepsRef.current = [
     { aiMessage: t("onboarding_q1"), field: "name" as const },
     { aiMessageFn: (name: string) => t("onboarding_q2")(name), field: "ageRange" as const },
     { aiMessage: t("onboarding_q3"), field: "lifeContext" as const },
     { aiMessageFn: (name: string) => t("onboarding_q4")(name), field: "emotionalEntry" as const },
   ];
+  const ONBOARDING_STEPS = onboardingStepsRef.current;
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
@@ -95,6 +104,10 @@ const Index = () => {
   }, []);
 
   const startOnboarding = useCallback(() => {
+    // Guard: prevent calling startOnboarding more than once
+    if (onboardingStartedRef.current) return;
+    onboardingStartedRef.current = true;
+
     // Check if profile already has required data — skip onboarding if so
     if (profile.name && profile.ageRange && profile.lifeContext) {
       setProfile(prev => ({ ...prev, onboardingComplete: true }));
@@ -297,6 +310,7 @@ const Index = () => {
           localStorage.removeItem("intus_anon_id");
         });
       }
+      mountUserRef.current = user.id;
       setSkipLogin(true);
       startConversation();
     }
@@ -446,6 +460,7 @@ const Index = () => {
     setMessages([]);
     setOnboardingStep(0);
     hasCheckedRef.current = false;
+    onboardingStartedRef.current = false;
     setSkipLogin(false);
     localStorage.removeItem("intus_welcome_seen");
     setShowWelcome(true);
