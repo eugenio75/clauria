@@ -305,6 +305,7 @@ const Index = () => {
           localStorage.removeItem("intus_anon_id");
         });
       }
+      mountUserRef.current = user.id;
       setSkipLogin(true);
       startConversation();
     }
