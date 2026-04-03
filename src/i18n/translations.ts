@@ -100,7 +100,7 @@ const translations = {
     // Welcome pages
     welcome_p1_l1: "Hi. I am Clauria.",
     welcome_p1_l2: "I am here to listen to you.",
-    welcome_p2: "You can tell me what is inside you: what troubles you, what you cannot resolve, what you have never said to anyone. But also what makes you happy and what you would like to share with joy.",
+    welcome_p2: "You can tell me what troubles you, what you cannot resolve, what you have never said to anyone. But also what makes you happy and what you would like to share with joy.",
     welcome_p3: "Even at night. Even the hardest things. Even the most beautiful ones.",
     welcome_next: "Next",
     welcome_start: "Start",
