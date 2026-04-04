@@ -30,6 +30,6 @@ export function getWarmReaction(lifeContext: string, lang: Language): string {
     }
   }
 
-  // Fallback: generic but still warm, never "Capito"
-  return lang === "it" ? "Grazie per avermelo detto." : "Thank you for telling me.";
+  // Fallback: warm and human, never clinical
+  return lang === "it" ? "Ogni giornata ha il suo peso." : "Every day carries its own weight.";
 }
