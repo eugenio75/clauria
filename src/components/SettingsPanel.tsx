@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, LogOut } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "../i18n/LanguageContext";
@@ -130,7 +130,6 @@ const SettingsPanel = ({
                 <section>
                   <h3 className="text-xs text-muted-foreground uppercase tracking-wider mb-3">{t("settings_section_profile")}</h3>
                   <div className="space-y-4">
-                    {/* Name */}
                     <div>
                       <label className="text-xs text-muted-foreground">{t("settings_name_label")}</label>
                       {editingName ? (
@@ -152,7 +151,6 @@ const SettingsPanel = ({
                       )}
                     </div>
 
-                    {/* Email (read-only) */}
                     {userEmail && (
                       <div>
                         <label className="text-xs text-muted-foreground">Email</label>
@@ -160,7 +158,6 @@ const SettingsPanel = ({
                       </div>
                     )}
 
-                    {/* Provider */}
                     {isAuthenticated && (
                       <div>
                         <label className="text-xs text-muted-foreground">{t("settings_provider_label")}</label>
@@ -200,7 +197,6 @@ const SettingsPanel = ({
                 <section>
                   <h3 className="text-xs text-muted-foreground uppercase tracking-wider mb-3">{t("settings_privacy")}</h3>
                   <div className="space-y-3">
-                    {/* Reset memory */}
                     {showResetConfirm ? (
                       <div className="space-y-2">
                         <p className="text-sm text-foreground">{t("settings_reset_confirm")}</p>
@@ -221,7 +217,6 @@ const SettingsPanel = ({
                         {t("settings_reset")}
                       </button>
                     )}
-
                     <p className="text-xs text-muted-foreground leading-relaxed">
                       {t("settings_privacy_text")}
                     </p>
@@ -230,26 +225,27 @@ const SettingsPanel = ({
 
                 {/* ── SUPPORTO ── */}
                 <section>
-                  <a href="mailto:supporto@intus.app" className="text-foreground/70 text-[15px]">
+                  <a href="mailto:supporto@clauria.azarlabs.com" className="text-foreground/70 text-[15px]">
                     {t("settings_support")}
                   </a>
                 </section>
 
                 {/* ── ZONA PERICOLOSA ── */}
                 {isAuthenticated && (
-                  <section className="border-t border-crisis-red/20 pt-6">
-                    <h3 className="text-xs text-crisis-red/70 uppercase tracking-wider mb-3">{t("settings_section_danger")}</h3>
-                    <div className="space-y-4">
-                      {/* Logout */}
-                      <button onClick={handleLogout} className="text-crisis-red text-[15px] font-medium">
-                        {t("settings_logout")}
-                      </button>
+                  <section className="border-t border-border/40 pt-6 space-y-3">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center justify-center gap-2 bg-muted/60 text-foreground rounded-xl py-3 text-[15px] font-medium transition-opacity hover:opacity-80"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      {t("settings_logout")}
+                    </button>
 
-                      {/* Delete Account */}
+                    <div className="border-t border-border/20 pt-3">
                       {showDeleteConfirm ? (
                         <div className="space-y-2">
-                          <p className="text-sm text-crisis-red/80">{t("settings_delete_confirm")}</p>
-                          <div className="flex gap-3">
+                          <p className="text-sm text-crisis-red/80 text-center">{t("settings_delete_confirm")}</p>
+                          <div className="flex gap-3 justify-center">
                             <button
                               onClick={handleDeleteAccount}
                               disabled={deleteLoading}
@@ -263,7 +259,10 @@ const SettingsPanel = ({
                           </div>
                         </div>
                       ) : (
-                        <button onClick={() => setShowDeleteConfirm(true)} className="text-crisis-red/60 text-[15px]">
+                        <button
+                          onClick={() => setShowDeleteConfirm(true)}
+                          className="w-full text-center text-sm text-crisis-red/50 italic py-1"
+                        >
                           {t("settings_delete_account")}
                         </button>
                       )}
