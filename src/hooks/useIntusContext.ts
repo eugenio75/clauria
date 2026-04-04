@@ -29,11 +29,10 @@ export interface IntusUserContext {
 export function useIntusContext() {
   const loadContext = useCallback(async (userId: string): Promise<IntusUserContext> => {
     const [{ data: profile }, { data: context }] = await Promise.all([
-      supabase.from("intus_profiles").select("*").eq("id", userId).single(),
-      supabase.from("intus_context").select("*").eq("user_id", userId).single(),
+      supabase.from("intus_profiles").select("*").eq("id", userId).maybeSingle(),
+      supabase.from("intus_context").select("*").eq("user_id", userId).maybeSingle(),
     ]);
-
-    return { ...profile, ...context } as unknown as IntusUserContext;
+    return { ...(profile ?? {}), ...(context ?? {}) } as unknown as IntusUserContext;
   }, []);
 
   const saveProfile = useCallback(async (userId: string, profile: {
@@ -48,7 +47,6 @@ export function useIntusContext() {
       life_context: profile.lifeContext,
       onboarding_complete: true,
     });
-
     await supabase.from("intus_context").upsert(
       {
         user_id: userId,

@@ -35,7 +35,7 @@ interface UserProfile {
 }
 
 const Index = () => {
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(!window.location.hash.includes("access_token"));
   const [splashFadingOut, setSplashFadingOut] = useState(false);
   const welcomeAlreadySeen = localStorage.getItem("intus_welcome_seen") === "true";
   const [showWelcome, setShowWelcome] = useState(!welcomeAlreadySeen);
@@ -514,7 +514,7 @@ const Index = () => {
     return <WelcomeScreen onComplete={handleWelcomeComplete} />;
   }
 
-  if (!isAuthenticated || (!skipLogin && appPhase === "splash")) {
+  if (!isAuthenticated) {
     return <LoginScreen />;
   }
 
