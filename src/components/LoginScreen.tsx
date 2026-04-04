@@ -36,7 +36,7 @@ const LoginScreen = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: "https://clauria.azarlabs.com",
+          redirectTo: window.location.origin,
         },
       });
       if (error) throw error;
@@ -48,24 +48,6 @@ const LoginScreen = () => {
     }
   };
 
-  const handleApple = async () => {
-    setLoading(true);
-    clearError();
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "apple",
-        options: {
-          redirectTo: "https://clauria.azarlabs.com",
-        },
-      });
-      if (error) throw error;
-    } catch (err) {
-      console.error(err);
-      setInlineError(t("login_error_generic"));
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleEmailSubmit = async () => {
     if (!email.trim()) return;
@@ -194,17 +176,6 @@ const LoginScreen = () => {
                 {t("login_google")}
               </button>
 
-              {/* Apple */}
-              <button
-                onClick={handleApple}
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-3 bg-black text-white rounded-xl py-3 text-[15px] font-medium transition-opacity disabled:opacity-50"
-              >
-                <svg width="17" height="17" viewBox="0 0 814 1000">
-                  <path fill="white" d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-37.5-155.5-114.1C159.5 740.7 114 633 114 531.3c0-175.1 113.4-268.2 224.1-268.2 58.5 0 107.4 38.5 143.8 38.5 34.5 0 89.5-40.8 155.5-40.8 24.6 0 108.2 2.6 168.4 83zm-119.3-254.5c28.1-36.8 47.7-88.6 47.7-140.4 0-7.1-.6-14.3-1.9-20.1-44.9 1.9-98.1 29.9-130.9 71.9-24.5 31.4-47.7 83.2-47.7 135.7 0 7.8 1.3 15.6 1.9 18.1 3.2.6 8.4 1.3 13.6 1.3 40.1 0 89.5-26.8 117.3-66.5z"/>
-                </svg>
-                {t("login_apple")}
-              </button>
 
               <div className="relative my-2">
                 <div className="absolute inset-0 flex items-center">
