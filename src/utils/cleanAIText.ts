@@ -7,11 +7,14 @@ export function cleanAIText(text: string): string {
 
   let cleaned = text;
 
-  // Remove XML-style system/internal tags (multiline)
-  cleaned = cleaned.replace(/<(system_reminder|system|anthropic_reminder|assistant_note|internal|context|reminder|instruction|metadata)[\s\S]*?<\/\1>/gi, "");
+  // Remove specific known system/internal XML tags (with optional attributes, multiline)
+  cleaned = cleaned.replace(/<(system_reminder|system|anthropic_reminder|assistant_note|internal|context|reminder|instruction|metadata)\b[^>]*>[\s\S]*?<\/\1>/gi, "");
+
+  // Catch-all: remove ANY XML tag ending in _reminder (e.g. <foo_reminder>...</foo_reminder>)
+  cleaned = cleaned.replace(/<([a-z_]+_reminder)\b[^>]*>[\s\S]*?<\/\1>/gi, "");
 
   // Remove any self-closing XML system tags
-  cleaned = cleaned.replace(/<(system_reminder|system|anthropic_reminder|assistant_note|internal|context|reminder|instruction|metadata)[^>]*\/>/gi, "");
+  cleaned = cleaned.replace(/<(system_reminder|system|anthropic_reminder|assistant_note|internal|context|reminder|instruction|metadata)\b[^>]*\/>/gi, "");
 
   // Remove [CONTEXT_UPDATE] JSON blocks (multi-line)
   cleaned = cleaned.replace(/\[CONTEXT_UPDATE\][\s\S]*?\[\/CONTEXT_UPDATE\]/gi, "");
