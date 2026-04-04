@@ -352,6 +352,8 @@ const Index = () => {
   }, [messages, isTyping, scrollToBottom]);
 
   const sendToAI = async (allMessages: Message[], onboardingData?: {
+    isOnboarding?: boolean;
+    onboardingStep?: number;
     isFirstResponseAfterOnboarding: boolean;
     name: string;
     ageRange: string;
