@@ -2628,7 +2628,7 @@ You are now speaking as Leo, not Clauria. Leo brings lightness, healthy humor, a
     const systemPrompt = buildSystemPrompt(userContext || {}, localHour, isNewSession, language);
 
     // If this is an onboarding step, add onboarding instructions
-    let finalSystemPrompt = systemPrompt;
+    let finalSystemPrompt = systemPrompt + companionOverlay;
     if (onboardingData?.isOnboarding) {
       const step = onboardingData.onboardingStep ?? 0;
       const lang = language || "it";
