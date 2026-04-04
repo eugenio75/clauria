@@ -219,7 +219,7 @@ const Index = () => {
 
   const hasCheckedRef = useRef(false);
   useEffect(() => {
-    if (!showSplash && isReady && isAuthenticated && !hasCheckedRef.current) {
+    if (isReady && isAuthenticated && !hasCheckedRef.current) {
       hasCheckedRef.current = true;
       setCheckingProfile(true);
       
@@ -291,8 +291,6 @@ const Index = () => {
           }
           setTimeout(() => addAIMessage(welcomeMsg), 500);
         } else {
-          // Check if we have partial profile data (name, age, life_context) even without completed onboarding
-          // This prevents re-asking questions the user already answered
           const partialProfile = {
             name: ctx.user_name || "",
             ageRange: ctx.age_range || "",
@@ -301,6 +299,8 @@ const Index = () => {
           if (partialProfile.name) {
             setProfile(prev => ({ ...prev, ...partialProfile }));
           }
+          setSkipLogin(true);
+          startOnboarding();
         }
       }).catch(() => {
       }).finally(() => {
