@@ -34,6 +34,9 @@ export function cleanAIText(text: string): string {
   // Remove lines starting with system-like prefixes
   cleaned = cleaned.replace(/^\s*(ABSOLUTE RULE|IMPORTANT|NOTE TO SELF|SYSTEM INSTRUCTION|INTERNAL NOTE):.*$/gm, "");
 
+  // Strip generic clinical acknowledgment openers that must never be shown to the user
+  cleaned = cleaned.replace(/^\s*(grazie\s+(?:per|di)\s+avermelo\s+detto|grazie\s+(?:per|di)\s+averlo\s+condiviso|thank you for telling me|thank you for sharing|thanks for sharing)[\s.!,:;\-–—]*/gim, "");
+
   // Clean up excessive whitespace left behind
   cleaned = cleaned.replace(/\n{3,}/g, "\n\n").trim();
 
