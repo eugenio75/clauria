@@ -142,6 +142,7 @@ const translations = {
     login_error_apple: "Apple sign-in failed. Please try again.",
     login_error_email: "Unable to send the email right now. Please try again in a few minutes.",
     login_error_otp_invalid: "Invalid or expired code. Please try again.",
+    login_email_hint: "Don't have an account? Enter your email and you'll receive an access code. If it's your first time, your account will be created automatically.",
 
     // Chat
     chat_placeholder: "Write here...",
