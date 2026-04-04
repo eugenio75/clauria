@@ -2660,15 +2660,15 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
     }
 
     const response = await fetch(
-      "https://api.openai.com/v1/chat/completions",
+      "https://ai.gateway.lovable.dev/v1/chat/completions",
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "gpt-4o",
+          model: "google/gemini-2.5-flash",
           messages: [
             { role: "system", content: finalSystemPrompt },
             ...messages,
