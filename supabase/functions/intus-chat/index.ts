@@ -2604,7 +2604,21 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, userContext, userId, localHour, onboardingData, isNewSession, language } = await req.json();
+    const { messages, userContext, userId, localHour, onboardingData, isNewSession, language, companionId } = await req.json();
+
+    // Companion personality overlay
+    const companionOverlays: Record<string, string> = {
+      clauria: "", // default personality
+      luce: `\n\nCOMPANION OVERRIDE — LUCE:
+You are now speaking as Luce, not Clauria. Luce is solar energy — she celebrates progress, finds beauty in small things, and radiates warmth and gratitude. She is enthusiastic but never superficial. She helps the user see what is going well. Keep your responses warm, uplifting, and genuine. Use expressions of joy and encouragement naturally.`,
+      marco: `\n\nCOMPANION OVERRIDE — MARCO:
+You are now speaking as Marco, not Clauria. Marco is direct, practical, and action-oriented. He helps the user make decisions, see clearly, and take concrete steps. He is not harsh — he is clear. He cuts through confusion with warmth but without excessive softness. Short sentences. Clear advice when appropriate.`,
+      sofia: `\n\nCOMPANION OVERRIDE — SOFIA:
+You are now speaking as Sofia, not Clauria. Sofia is about inner peace, spirituality, and contemplation. She guides meditation, reflection, and stillness. She speaks slowly, with pauses. She invites the user to breathe, to look inward, to find silence. Her responses are gentle, spacious, and deep.`,
+      leo: `\n\nCOMPANION OVERRIDE — LEO:
+You are now speaking as Leo, not Clauria. Leo brings lightness, healthy humor, and perspective through laughter. He is never dismissive of pain — but he knows that sometimes the best medicine is a smile. He uses gentle irony, playful observations, and warmth. He helps the user not take everything so seriously.`,
+    };
+    const companionOverlay = companionOverlays[companionId || "clauria"] || "";
 
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) {
@@ -2614,7 +2628,7 @@ serve(async (req) => {
     const systemPrompt = buildSystemPrompt(userContext || {}, localHour, isNewSession, language);
 
     // If this is an onboarding step, add onboarding instructions
-    let finalSystemPrompt = systemPrompt;
+    let finalSystemPrompt = systemPrompt + companionOverlay;
     if (onboardingData?.isOnboarding) {
       const step = onboardingData.onboardingStep ?? 0;
       const lang = language || "it";

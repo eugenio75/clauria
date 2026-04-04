@@ -13,11 +13,14 @@ import SplashScreen from "../components/SplashScreen";
 import UnsentLetter from "../components/UnsentLetter";
 import LoginScreen from "../components/LoginScreen";
 import WelcomeScreen from "../components/WelcomeScreen";
+import CompanionSelector from "../components/CompanionSelector";
+import MoodCheckIn from "../components/MoodCheckIn";
 import { useIntusAuth } from "../hooks/useIntusAuth";
 import { useIntusContext } from "../hooks/useIntusContext";
 import { useLanguage } from "../i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { COMPANIONS, Companion } from "../types/companion";
 
 interface Message {
   id: string;
@@ -60,6 +63,12 @@ const Index = () => {
   const [isNewSession, setIsNewSession] = useState(true);
   const [skipLogin, setSkipLogin] = useState(false);
   const [checkingProfile, setCheckingProfile] = useState(false);
+
+  // Companion & mood state
+  const [activeCompanion, setActiveCompanion] = useState<Companion["id"]>("clauria");
+  const [showCompanionSelector, setShowCompanionSelector] = useState(false);
+  const [showMoodCheckIn, setShowMoodCheckIn] = useState(false);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const { user, loading, isReady } = useIntusAuth();
   const isGuest = !!user?.is_anonymous;
@@ -67,13 +76,14 @@ const Index = () => {
   const { loadContext, saveProfile, resetContext } = useIntusContext();
   const { t, lang } = useLanguage();
 
+  const activeCompanionData = COMPANIONS.find(c => c.id === activeCompanion) || COMPANIONS[0];
+
   const onboardingStepsRef = useRef([
     { aiMessage: t("onboarding_q1"), field: "name" as const },
     { aiMessageFn: (name: string) => t("onboarding_q2")(name), field: "ageRange" as const },
     { aiMessage: t("onboarding_q3"), field: "lifeContext" as const },
     { field: "emotionalEntry" as const, dynamic: true },
   ]);
-  // Update steps when language changes
   onboardingStepsRef.current = [
     { aiMessage: t("onboarding_q1"), field: "name" as const },
     { aiMessageFn: (name: string) => t("onboarding_q2")(name), field: "ageRange" as const },
@@ -109,11 +119,9 @@ const Index = () => {
   }, []);
 
   const startOnboarding = useCallback(() => {
-    // Guard: prevent calling startOnboarding more than once
     if (onboardingStartedRef.current) return;
     onboardingStartedRef.current = true;
 
-    // Check if profile already has required data — skip onboarding if so
     if (profile.name && profile.ageRange && profile.lifeContext) {
       setProfile(prev => ({ ...prev, onboardingComplete: true }));
       setAppPhase("conversation");
@@ -122,7 +130,6 @@ const Index = () => {
       return;
     }
     setAppPhase("onboarding");
-    // Find the first unanswered onboarding step
     const fields = ["name", "ageRange", "lifeContext", "emotionalEntry"] as const;
     let firstEmpty = 0;
     for (let i = 0; i < fields.length; i++) {
@@ -160,6 +167,12 @@ const Index = () => {
 
     try {
       const ctx = await loadContext(user.id);
+
+      // Restore active companion from DB
+      if (ctx.active_companion) {
+        setActiveCompanion(ctx.active_companion as Companion["id"]);
+      }
+
       if (ctx.user_name && ctx.session_count && ctx.session_count > 0) {
         setProfile({
           name: ctx.user_name || "",
@@ -170,13 +183,18 @@ const Index = () => {
         });
         setAppPhase("conversation");
 
-        // Guard: only one greeting per session
         if (greetingSentRef.current) return;
         greetingSentRef.current = true;
 
+        // Check if mood check-in should show
+        const lastMoodDate = sessionStorage.getItem("intus_mood_date");
+        const today = new Date().toDateString();
+        if (lastMoodDate !== today) {
+          setShowMoodCheckIn(true);
+        }
+
         let welcomeMsg: string;
         const reentryAlreadyShown = sessionStorage.getItem("intus_reentry_shown") === "true";
-        // Helper: reject raw metadata strings
         const sanitizeHookInline = (s: string): string | null => {
           if (!s) return null;
           if (/\b(developing|conflict|app-based|co-founder|evangelization|recurring_theme|session_count|emotional_theme|CONTEXT|UPDATE|MODE \d|PHASE \d)\b/i.test(s)) return null;
@@ -200,7 +218,7 @@ const Index = () => {
           welcomeMsg = `Ciao ${ctx.user_name}. Sono qui. Di cosa hai bisogno oggi?`;
         }
         setTimeout(() => addAIMessage(welcomeMsg), 500);
-        return; // Skip onboarding entirely
+        return;
       }
     } catch {
       // No profile in DB yet
@@ -239,6 +257,10 @@ const Index = () => {
           });
           setAppPhase("conversation");
 
+          if (ctx.active_companion) {
+            setActiveCompanion(ctx.active_companion as Companion["id"]);
+          }
+
           sessionStorage.setItem("intus_session_active", "true");
 
           const hoursSinceLast = ctx.last_session_at
@@ -246,39 +268,36 @@ const Index = () => {
             : Infinity;
           const showBentornato = !isContinuingSession && hoursSinceLast >= 8;
 
-      const reentryAlreadyShown = sessionStorage.getItem("intus_reentry_shown") === "true";
+          const reentryAlreadyShown = sessionStorage.getItem("intus_reentry_shown") === "true";
 
-          // Helper: sanitize any context string to ensure no raw metadata leaks
           const sanitizeHook = (s: string): string | null => {
             if (!s) return null;
-            // Reject strings that look like raw metadata summaries
             const metadataPatterns = /\b(developing|conflict|app-based|co-founder|evangelization|recurring_theme|session_count|emotional_theme|CONTEXT|UPDATE|MODE \d|PHASE \d)\b/i;
             if (metadataPatterns.test(s)) return null;
-            // Reject strings with JSON-like patterns
             if (s.includes('{') || s.includes('[') || s.includes(':')) return null;
             return s;
           };
 
-          // Guard: only one greeting per session
           if (greetingSentRef.current) return;
           greetingSentRef.current = true;
+
+          // Check mood
+          const lastMoodDate = sessionStorage.getItem("intus_mood_date");
+          const today = new Date().toDateString();
+          if (lastMoodDate !== today) {
+            setShowMoodCheckIn(true);
+          }
 
           let welcomeMsg: string;
           if (!reentryAlreadyShown && showBentornato && ctx.next_session_hook) {
             const safeHook = sanitizeHook(ctx.next_session_hook);
-            if (safeHook) {
-              welcomeMsg = safeHook;
-            } else {
-              welcomeMsg = `Bentornato/a ${ctx.user_name}. Come stai oggi?`;
-            }
+            welcomeMsg = safeHook || `Bentornato/a ${ctx.user_name}. Come stai oggi?`;
             sessionStorage.setItem("intus_reentry_shown", "true");
           } else if (!reentryAlreadyShown && showBentornato && ctx.step_proposed) {
             const safeStep = sanitizeHook(ctx.step_proposed);
-            if (safeStep) {
-              welcomeMsg = `Bentornato/a ${ctx.user_name}. L'ultima volta avevi deciso di ${safeStep}. Com'è andata?`;
-            } else {
-              welcomeMsg = `Bentornato/a ${ctx.user_name}. Come stai oggi?`;
-            }
+            welcomeMsg = safeStep
+              ? `Bentornato/a ${ctx.user_name}. L'ultima volta avevi deciso di ${safeStep}. Com'è andata?`
+              : `Bentornato/a ${ctx.user_name}. Come stai oggi?`;
             sessionStorage.setItem("intus_reentry_shown", "true");
           } else if (!reentryAlreadyShown && (ctx.recurring_theme_count || 0) >= 3) {
             welcomeMsg = `Ciao ${ctx.user_name}. Ultimamente parliamo spesso di qualcosa di simile. Vuoi provare un approccio diverso questa volta?`;
@@ -316,7 +335,6 @@ const Index = () => {
     if (!didCaptureMount.current) {
       didCaptureMount.current = true;
       mountUserRef.current = user?.id;
-      // If user is already authenticated at mount (e.g. OAuth redirect), trigger conversation
       if (user && !user.is_anonymous) {
         hasCheckedRef.current = false;
       }
@@ -329,7 +347,6 @@ const Index = () => {
           body: { anonUserId: anonId, newUserId: user.id },
         }).then(({ error }) => {
           if (error) console.error("Guest data migration failed:", error);
-          else console.log("Guest data migrated successfully");
         }).finally(() => {
           localStorage.removeItem("intus_anon_id");
         });
@@ -340,7 +357,6 @@ const Index = () => {
     }
   }, [isReady, user, startConversation]);
 
-  // Skip splash on OAuth redirect — if already authenticated when splash is still showing
   useEffect(() => {
     if (isReady && isAuthenticated && showSplash) {
       setShowSplash(false);
@@ -379,6 +395,7 @@ const Index = () => {
           localHour: new Date().getHours(),
           isNewSession,
           language: lang,
+          companionId: activeCompanion,
           ...(onboardingData ? { onboardingData } : {}),
         },
       });
@@ -448,7 +465,6 @@ const Index = () => {
 
     if (nextStep < ONBOARDING_STEPS.length) {
       setOnboardingStep(nextStep);
-      // Let AI respond naturally instead of hardcoded strings
       const contextualMessages = [...messages, { id: "u", content: text, sender: "user" as const }];
       await sendToAI(contextualMessages, {
         isOnboarding: true,
@@ -492,6 +508,41 @@ const Index = () => {
     }
   };
 
+  const handleMoodSelect = async (mood: number) => {
+    setShowMoodCheckIn(false);
+    sessionStorage.setItem("intus_mood_date", new Date().toDateString());
+    if (user) {
+      try {
+        await supabase.from("intus_context").upsert(
+          {
+            user_id: user.id,
+            daily_mood: mood,
+          },
+          { onConflict: "user_id" }
+        );
+      } catch (err) {
+        console.error("Failed to save mood:", err);
+      }
+    }
+  };
+
+  const handleCompanionChange = async (id: Companion["id"]) => {
+    setActiveCompanion(id);
+    if (user) {
+      try {
+        await supabase.from("intus_context").upsert(
+          {
+            user_id: user.id,
+            active_companion: id,
+          },
+          { onConflict: "user_id" }
+        );
+      } catch (err) {
+        console.error("Failed to save companion:", err);
+      }
+    }
+  };
+
   const handleResetMemory = async () => {
     if (user) {
       try {
@@ -519,7 +570,7 @@ const Index = () => {
   if (!isReady || checkingProfile) {
     return (
       <div className="fixed inset-0 bg-parchment flex items-center justify-center">
-        <span className="text-5xl text-trust-blue select-none animate-pulse">✦</span>
+        <span className="text-5xl text-trust-blue select-none animate-breathe">✦</span>
       </div>
     );
   }
@@ -536,7 +587,17 @@ const Index = () => {
     <div className="flex flex-col h-[100dvh] bg-parchment max-w-[600px] mx-auto overflow-x-hidden">
       {/* Header */}
       <header className="flex items-center justify-between px-5 py-4 pt-safe">
-        <h1 className="font-display text-xl tracking-wide text-foreground">CLAURIA</h1>
+        <button
+          onClick={() => setShowCompanionSelector(true)}
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+        >
+          <span className="text-lg" style={{ color: activeCompanionData.color }}>
+            {activeCompanionData.emoji}
+          </span>
+          <h1 className="font-display text-xl tracking-wide text-foreground">
+            {activeCompanionData.name.toUpperCase()}
+          </h1>
+        </button>
         <button
           onClick={() => setSettingsOpen(true)}
           className="text-muted-foreground/60 hover:text-muted-foreground transition-colors"
@@ -549,7 +610,11 @@ const Index = () => {
       <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden px-4 space-y-4 pb-4 scrollbar-hide">
         {messages.map((msg) => (
           <div key={msg.id}>
-            <MessageBubble content={msg.content} sender={msg.sender} />
+            <MessageBubble
+              content={msg.content}
+              sender={msg.sender}
+              companionEmoji={activeCompanionData.emoji}
+            />
             {msg.crisis && <CrisisCard />}
           </div>
         ))}
@@ -584,6 +649,8 @@ const Index = () => {
         disabled={isTyping}
         guestMessageCount={0}
         isAuthenticated={true}
+        companionColor={activeCompanionData.color}
+        companionId={activeCompanion}
       />
 
       {/* Settings */}
@@ -600,6 +667,22 @@ const Index = () => {
         onResetMemory={handleResetMemory}
         isAuthenticated={true}
       />
+
+      {/* Companion Selector */}
+      <AnimatePresence>
+        {showCompanionSelector && (
+          <CompanionSelector
+            currentCompanion={activeCompanion}
+            onSelect={handleCompanionChange}
+            onClose={() => setShowCompanionSelector(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Mood Check-In */}
+      <AnimatePresence>
+        {showMoodCheckIn && <MoodCheckIn onSelect={handleMoodSelect} />}
+      </AnimatePresence>
 
       {/* Silence Mode */}
       <AnimatePresence>
