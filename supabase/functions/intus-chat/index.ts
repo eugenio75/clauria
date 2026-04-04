@@ -2613,9 +2613,41 @@ serve(async (req) => {
 
     const systemPrompt = buildSystemPrompt(userContext || {}, localHour, isNewSession, language);
 
-    // If this is the first response after onboarding, add special instructions
+    // If this is an onboarding step, add onboarding instructions
     let finalSystemPrompt = systemPrompt;
-    if (onboardingData?.isFirstResponseAfterOnboarding) {
+    if (onboardingData?.isOnboarding) {
+      const step = onboardingData.onboardingStep ?? 0;
+      const lang = language || "it";
+      finalSystemPrompt += `
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ONBOARDING MODE — Step ${step}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+You are in the onboarding phase. The user has just answered a question. Respond BRIEFLY (1-2 sentences max), warmly, naturally. Then ask the next question.
+
+${step === 1 ? `The user just told you their name: "${onboardingData.name}".
+Greet them warmly BY THEIR NAME. You are CLAURIA — NEVER repeat their name as if it were yours. NEVER say "mi chiamo ${onboardingData.name}".
+Then ask their age range naturally.
+${lang === "it" ? 'Example: "Ciao [nome], sono contenta che tu sia qui. Quanti anni hai?"' : 'Example: "Hi [name], I\'m glad you\'re here. How old are you?"'}` : ""}
+
+${step === 2 ? `The user just shared their age range: "${onboardingData.ageRange}". Their name is "${onboardingData.name}".
+Acknowledge their age warmly (without being clinical). Then ask about their daily life naturally.
+${lang === "it" ? 'Ask something like: "E nella vita di tutti i giorni, cosa fai? Lavori, studi, sei in un momento di cambiamento..."' : 'Ask something like: "And in your daily life, what do you do? Work, study, going through a transition..."'}` : ""}
+
+${step === 3 ? `The user just shared their life context: "${onboardingData.lifeContext}". Their name is "${onboardingData.name}", age: "${onboardingData.ageRange}".
+Give a warm, specific, human reaction to what they shared about their life — NOT generic, NOT "Grazie per avermelo detto", NOT "Grazie per averlo condiviso", NOT any clinical acknowledgment.
+Then ask the fixed question:
+${lang === "it" ? '"E in questo momento — c\'è qualcosa che ti turba, una decisione da prendere, o magari qualcosa di bello che vuoi condividere?"' : '"And right now — is there something troubling you, a decision to make, or perhaps something beautiful you want to share?"'}` : ""}
+
+CRITICAL RULES:
+- Keep responses SHORT (1-2 sentences + the question). Do NOT write long paragraphs.
+- Be warm and natural, never mechanical or scripted.
+- NEVER say "Grazie per avermelo detto" or any similar clinical acknowledgment.
+- NEVER repeat the user's name as if it were your own name. You are Clauria.
+- Do NOT include [CONTEXT_UPDATE] blocks during onboarding.
+`;
+    } else if (onboardingData?.isFirstResponseAfterOnboarding) {
       finalSystemPrompt += `
 
 FIRST RESPONSE AFTER ONBOARDING — SPECIAL INSTRUCTIONS:
