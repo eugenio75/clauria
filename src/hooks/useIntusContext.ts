@@ -17,6 +17,9 @@ export interface IntusUserContext {
   step_accepted?: boolean | null;
   next_session_hook?: string;
   session_summary?: string;
+  daily_mood?: number;
+  mood_history?: Array<{ date: string; mood: number }>;
+  active_companion?: string;
   session_history?: Array<{
     date: string;
     summary: string;
