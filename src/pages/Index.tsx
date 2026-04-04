@@ -448,17 +448,17 @@ const Index = () => {
 
     if (nextStep < ONBOARDING_STEPS.length) {
       setOnboardingStep(nextStep);
-      const next = ONBOARDING_STEPS[nextStep];
-      let msg: string;
-      if (next.dynamic) {
-        // Q4: warm reaction to life context + fixed question
-        const warmReaction = getWarmReaction(text, lang);
-        const fixedQuestion = t("onboarding_q4_question");
-        msg = `${warmReaction}\n\n${fixedQuestion}`;
-      } else {
-        msg = next.aiMessageFn ? next.aiMessageFn(newProfile.name) : next.aiMessage!;
-      }
-      addAIMessage(msg);
+      // Let AI respond naturally instead of hardcoded strings
+      const contextualMessages = [...messages, { id: "u", content: text, sender: "user" as const }];
+      await sendToAI(contextualMessages, {
+        isOnboarding: true,
+        onboardingStep: nextStep,
+        isFirstResponseAfterOnboarding: false,
+        name: newProfile.name || "",
+        ageRange: newProfile.ageRange || "",
+        lifeContext: newProfile.lifeContext || "",
+        emotionalEntry: newProfile.emotionalEntry || "",
+      });
     } else {
       const finalProfile = { ...newProfile, onboardingComplete: true };
       setProfile(finalProfile);
@@ -481,6 +481,8 @@ const Index = () => {
         { id: "sys", content: text, sender: "user" as const },
       ]);
       sendToAI(contextualMessages, {
+        isOnboarding: false,
+        onboardingStep: 4,
         isFirstResponseAfterOnboarding: true,
         name: finalProfile.name,
         ageRange: finalProfile.ageRange,
