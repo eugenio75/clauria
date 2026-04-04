@@ -7,6 +7,41 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function extractTextFromAIContent(content: unknown): string {
+  if (typeof content === "string") return content;
+
+  if (Array.isArray(content)) {
+    return content.map((part) => extractTextFromAIContent(part)).join("");
+  }
+
+  if (!content || typeof content !== "object") return "";
+
+  const record = content as Record<string, unknown>;
+  const partType = typeof record.type === "string" ? record.type : "";
+  if (["thinking", "reasoning", "redacted_thinking"].includes(partType)) {
+    return "";
+  }
+
+  if (typeof record.text === "string") return record.text;
+  if (typeof record.content === "string") return record.content;
+  if (typeof record.value === "string") return record.value;
+
+  if (record.text && typeof record.text === "object") {
+    const nestedText = extractTextFromAIContent(record.text);
+    if (nestedText) return nestedText;
+  }
+
+  if (record.content && typeof record.content === "object") {
+    const nestedContent = extractTextFromAIContent(record.content);
+    if (nestedContent) return nestedContent;
+  }
+
+  if (Array.isArray(record.parts)) return extractTextFromAIContent(record.parts);
+  if (Array.isArray(record.items)) return extractTextFromAIContent(record.items);
+
+  return "";
+}
+
 // ─── Liturgical Calendar ───────────────────────────────────
 function getLiturgicalSeason(date: Date): { season: string; note: string } {
   const year = date.getFullYear();
@@ -2617,7 +2652,7 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
           model: "google/gemini-2.5-flash",
           messages: [
             { role: "system", content: finalSystemPrompt },
-            ...messages.slice(-10),
+            ...messages,
           ],
         }),
       }
@@ -2645,7 +2680,16 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
     }
 
     const data = await response.json();
-    const rawText = data.choices?.[0]?.message?.content || "";
+    const rawContent =
+      data.choices?.[0]?.message?.content ??
+      data.choices?.[0]?.delta?.content ??
+      "";
+    const rawText = extractTextFromAIContent(rawContent).trim();
+
+    if (!rawText) {
+      console.error("AI returned no visible text content");
+      throw new Error("AI returned an empty response");
+    }
 
     // Parse CONTEXT_UPDATE block
     const contextMatch = rawText.match(
