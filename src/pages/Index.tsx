@@ -316,6 +316,10 @@ const Index = () => {
     if (!didCaptureMount.current) {
       didCaptureMount.current = true;
       mountUserRef.current = user?.id;
+      // If user is already authenticated at mount (e.g. OAuth redirect), trigger conversation
+      if (user && !user.is_anonymous) {
+        hasCheckedRef.current = false;
+      }
       return;
     }
     if (user && user.id !== mountUserRef.current) {
@@ -335,6 +339,13 @@ const Index = () => {
       startConversation();
     }
   }, [isReady, user, startConversation]);
+
+  // Skip splash on OAuth redirect — if already authenticated when splash is still showing
+  useEffect(() => {
+    if (isReady && isAuthenticated && showSplash) {
+      setShowSplash(false);
+    }
+  }, [isReady, isAuthenticated, showSplash]);
 
   useEffect(() => {
     scrollToBottom();
