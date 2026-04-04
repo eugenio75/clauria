@@ -1,38 +1,48 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "../i18n/LanguageContext";
+import { COMPANIONS } from "../types/companion";
 
 interface WelcomeScreenProps {
   onComplete: () => void;
 }
+
+const letterVariants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.08, duration: 0.3, ease: "easeOut" },
+  }),
+};
 
 const WelcomeScreen = ({ onComplete }: WelcomeScreenProps) => {
   const [page, setPage] = useState(0);
   const { lang, setLang, t } = useLanguage();
 
   const pages = [
-    {
-      lines: [t("welcome_p1_l1"), t("welcome_p1_l2")],
-    },
-    {
-      lines: [t("welcome_p2")],
-    },
-    {
-      lines: [t("welcome_p3")],
-    },
+    { lines: [t("welcome_p1_l1"), t("welcome_p1_l2")] },
+    { lines: [t("welcome_p2")] },
+    { lines: [t("welcome_p3")] },
   ];
 
   const isLastPage = page === pages.length - 1;
+  const clauriaName = "CLAURIA";
 
   return (
-    <div className="fixed inset-0 bg-parchment flex flex-col items-center justify-center px-8">
+    <div
+      className="fixed inset-0 flex flex-col items-center justify-center px-8"
+      style={{
+        background: "radial-gradient(ellipse at 30% 50%, hsl(38,60%,92%), hsl(215,40%,88%), hsl(38,35%,96%))",
+      }}
+    >
       {/* Language selector */}
       <div className="absolute top-6 right-6 flex gap-2">
         <button
           onClick={() => setLang("it")}
           className={`text-sm font-medium px-3 py-1.5 rounded-lg transition-colors ${
             lang === "it"
-              ? "bg-trust-blue text-primary-foreground"
+              ? "bg-warm-amber text-primary-foreground"
               : "bg-muted text-muted-foreground hover:bg-muted/80"
           }`}
         >
@@ -42,7 +52,7 @@ const WelcomeScreen = ({ onComplete }: WelcomeScreenProps) => {
           onClick={() => setLang("en")}
           className={`text-sm font-medium px-3 py-1.5 rounded-lg transition-colors ${
             lang === "en"
-              ? "bg-trust-blue text-primary-foreground"
+              ? "bg-warm-amber text-primary-foreground"
               : "bg-muted text-muted-foreground hover:bg-muted/80"
           }`}
         >
@@ -51,16 +61,7 @@ const WelcomeScreen = ({ onComplete }: WelcomeScreenProps) => {
       </div>
 
       {/* Content */}
-      <div className="max-w-[440px] w-full flex flex-col items-center text-center space-y-4 min-h-[200px] justify-center">
-        <motion.span
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1.2, ease: "easeInOut" }}
-          className="text-2xl text-trust-blue select-none mb-6"
-        >
-          ✦
-        </motion.span>
-
+      <div className="max-w-[440px] w-full flex flex-col items-center text-center space-y-4 min-h-[280px] justify-center">
         <AnimatePresence mode="wait">
           <motion.div
             key={page}
@@ -72,23 +73,70 @@ const WelcomeScreen = ({ onComplete }: WelcomeScreenProps) => {
           >
             {page === 0 ? (
               <>
+                {/* Animated symbol */}
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  className="text-4xl text-trust-blue select-none block mb-4"
+                >
+                  ✦
+                </motion.span>
+
                 <p className="text-foreground text-2xl leading-[2] font-display">
                   {lang === "en" ? "Hi." : "Ciao."}
                 </p>
                 <p className="text-foreground leading-[1.6] font-display">
                   <span className="text-2xl">{lang === "en" ? "I am " : "Sono "}</span>
-                  <span className="text-4xl font-semibold tracking-wide">Clauria.</span>
+                  <span className="text-4xl font-semibold tracking-wide">
+                    {clauriaName.split("").map((letter, i) => (
+                      <motion.span
+                        key={i}
+                        custom={i}
+                        initial="hidden"
+                        animate="visible"
+                        variants={letterVariants}
+                        className="inline-block"
+                      >
+                        {letter}
+                      </motion.span>
+                    ))}
+                  </span>
                 </p>
                 <p className="text-foreground text-2xl leading-[2] font-display mt-2">
                   {t("welcome_p1_l2")}
                 </p>
               </>
+            ) : page === 2 ? (
+              <>
+                {pages[page].lines.map((line, i) => (
+                  <p key={i} className="text-foreground text-xl leading-[2] font-display">
+                    {line}
+                  </p>
+                ))}
+
+                {/* Companion preview cards */}
+                <div className="flex gap-3 overflow-x-auto py-4 px-1 scrollbar-hide mt-4">
+                  {COMPANIONS.map((c) => (
+                    <motion.div
+                      key={c.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 + COMPANIONS.indexOf(c) * 0.1 }}
+                      className={`flex-shrink-0 bg-gradient-to-br ${c.bgGradient} rounded-xl px-4 py-3 text-center min-w-[100px] border border-white/40 shadow-sm`}
+                    >
+                      <span className="text-2xl block mb-1" style={{ color: c.color }}>{c.emoji}</span>
+                      <p className="text-xs font-medium text-foreground">{c.name}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {lang === "it" ? c.tagline : c.taglineEn}
+                      </p>
+                    </motion.div>
+                  ))}
+                </div>
+              </>
             ) : (
               pages[page].lines.map((line, i) => (
-                <p
-                  key={i}
-                  className="text-foreground text-2xl leading-[2] font-display"
-                >
+                <p key={i} className="text-foreground text-xl leading-[2] font-display">
                   {line}
                 </p>
               ))
@@ -103,7 +151,7 @@ const WelcomeScreen = ({ onComplete }: WelcomeScreenProps) => {
           <span
             key={i}
             className={`w-2 h-2 rounded-full transition-colors ${
-              i === page ? "bg-trust-blue" : "bg-muted-foreground/30"
+              i === page ? "bg-warm-amber" : "bg-muted-foreground/30"
             }`}
           />
         ))}
@@ -114,14 +162,17 @@ const WelcomeScreen = ({ onComplete }: WelcomeScreenProps) => {
         {isLastPage ? (
           <button
             onClick={onComplete}
-            className="bg-trust-blue text-primary-foreground font-display text-base px-8 py-3 rounded-xl tracking-wide transition-opacity hover:opacity-90"
+            className="font-display text-base px-8 py-3 rounded-xl tracking-wide transition-opacity hover:opacity-90 text-primary-foreground"
+            style={{
+              background: "linear-gradient(135deg, hsl(25,65%,42%), hsl(215,55%,45%))",
+            }}
           >
             {t("welcome_start")}
           </button>
         ) : (
           <button
             onClick={() => setPage((p) => p + 1)}
-            className="bg-trust-blue text-primary-foreground font-display text-base px-8 py-3 rounded-xl tracking-wide transition-opacity hover:opacity-90"
+            className="bg-warm-amber text-primary-foreground font-display text-base px-8 py-3 rounded-xl tracking-wide transition-opacity hover:opacity-90"
           >
             {t("welcome_next")}
           </button>

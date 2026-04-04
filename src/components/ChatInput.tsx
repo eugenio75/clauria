@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { ArrowUp, Mic, MicOff } from "lucide-react";
 import { useLanguage } from "../i18n/LanguageContext";
+import { Companion } from "../types/companion";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -8,6 +9,8 @@ interface ChatInputProps {
   placeholder?: string;
   guestMessageCount?: number;
   isAuthenticated?: boolean;
+  companionColor?: string;
+  companionId?: Companion["id"];
 }
 
 const SpeechRecognition =
@@ -15,7 +18,23 @@ const SpeechRecognition =
     ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     : null;
 
-const ChatInput = ({ onSend, disabled, placeholder, guestMessageCount = 0, isAuthenticated = false }: ChatInputProps) => {
+const COMPANION_PLACEHOLDERS: Record<Companion["id"], { it: string; en: string }> = {
+  clauria: { it: "Scrivi qui...", en: "Write here..." },
+  luce: { it: "Cosa ti rende felice oggi?", en: "What makes you happy today?" },
+  marco: { it: "Qual è la decisione?", en: "What's the decision?" },
+  sofia: { it: "Come ti senti dentro?", en: "How do you feel inside?" },
+  leo: { it: "Raccontami qualcosa!", en: "Tell me something!" },
+};
+
+const ChatInput = ({
+  onSend,
+  disabled,
+  placeholder,
+  guestMessageCount = 0,
+  isAuthenticated = false,
+  companionColor,
+  companionId = "clauria",
+}: ChatInputProps) => {
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { t, lang } = useLanguage();
@@ -54,13 +73,8 @@ const ChatInput = ({ onSend, disabled, placeholder, guestMessageCount = 0, isAut
       setIsListening(false);
     };
 
-    recognition.onerror = () => {
-      setIsListening(false);
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
 
     recognitionRef.current = recognition;
     recognition.start();
@@ -69,9 +83,10 @@ const ChatInput = ({ onSend, disabled, placeholder, guestMessageCount = 0, isAut
 
   const remaining = 5 - guestMessageCount;
   const hasSpeechSupport = !!SpeechRecognition;
+  const dynamicPlaceholder = placeholder || COMPANION_PLACEHOLDERS[companionId]?.[lang] || t("chat_placeholder");
 
   return (
-    <div className="border-t border-border/50 bg-parchment px-4 py-3 pb-safe">
+    <div className="border-t border-border/30 bg-parchment px-4 py-3 pb-safe">
       {!isAuthenticated && guestMessageCount >= 3 && (
         <p className="text-xs text-muted-foreground/60 italic text-center mt-0 mb-2">
           {t("chat_guest_remaining")(remaining)}
@@ -84,7 +99,7 @@ const ChatInput = ({ onSend, disabled, placeholder, guestMessageCount = 0, isAut
             disabled={disabled}
             className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all disabled:opacity-30 ${
               isListening
-                ? "bg-red-500 text-white animate-pulse"
+                ? "bg-crisis-red text-white animate-pulse"
                 : "text-muted-foreground/60 hover:text-muted-foreground"
             }`}
             aria-label={isListening ? t("mic_stop") : t("mic_start")}
@@ -102,17 +117,18 @@ const ChatInput = ({ onSend, disabled, placeholder, guestMessageCount = 0, isAut
               handleSubmit();
             }
           }}
-          placeholder={placeholder || t("chat_placeholder")}
+          placeholder={dynamicPlaceholder}
           disabled={disabled}
           rows={1}
-          className="flex-1 resize-none bg-transparent text-foreground text-[15px] placeholder:text-muted-foreground/60 focus:outline-none py-2"
+          className="flex-1 resize-none bg-transparent text-foreground text-[15px] placeholder:text-muted-foreground/50 focus:outline-none py-2"
         />
         <button
           onClick={handleSubmit}
           disabled={disabled || !value.trim()}
-          className="flex-shrink-0 w-9 h-9 rounded-full bg-trust-blue flex items-center justify-center transition-opacity disabled:opacity-30"
+          className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all disabled:opacity-30 shadow-sm"
+          style={{ backgroundColor: companionColor || "hsl(215,55%,45%)" }}
         >
-          <ArrowUp className="w-4 h-4 text-primary-foreground" />
+          <ArrowUp className="w-4 h-4 text-white" />
         </button>
       </div>
     </div>
