@@ -214,6 +214,9 @@ const LoginScreen = () => {
               >
                 {loading ? t("login_sending") : t("login_send_code")}
               </button>
+              <p className="text-xs text-muted-foreground/60 leading-relaxed text-center mt-1">
+                {t("login_email_hint")}
+              </p>
               <button
                 onClick={() => { setStep("choose"); clearError(); }}
                 className="text-xs text-muted-foreground/60 italic"

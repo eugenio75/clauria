@@ -588,12 +588,11 @@ const Index = () => {
         isOpen={settingsOpen}
         onClose={() => setSettingsOpen(false)}
         userName={profile.name}
+        userEmail={user?.email || ""}
+        authProvider={user?.app_metadata?.provider || "email"}
+        userId={user?.id}
         onNameChange={(name) => {
-          const updated = { ...profile, name };
-          setProfile(updated);
-          if (user) {
-            supabase.from("intus_profiles").update({ user_name: name }).eq("id", user.id);
-          }
+          setProfile((prev) => ({ ...prev, name }));
         }}
         onResetMemory={handleResetMemory}
         isAuthenticated={true}
