@@ -145,6 +145,8 @@ const translations = {
     login_error_email: "Unable to send the email right now. Please try again in a few minutes.",
     login_error_otp_invalid: "Invalid or expired code. Please try again.",
     login_email_hint: "Don't have an account? Enter your email and you'll receive an access code. If it's your first time, your account will be created automatically.",
+    login_safe_space: "A space just for you.",
+    login_privacy_line: "No ads. No data sold. Just you.",
 
     // Chat
     chat_placeholder: "Write here...",
