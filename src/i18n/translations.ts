@@ -34,6 +34,7 @@ const translations = {
     login_error_apple: "Accesso con Apple non riuscito. Riprova.",
     login_error_email: "Non riesco a inviare la mail in questo momento. Riprova tra qualche minuto.",
     login_error_otp_invalid: "Codice non valido o scaduto. Riprova.",
+    login_email_hint: "Non hai un account? Inserisci la tua email e riceverai un codice di accesso. Se è la prima volta, il tuo account verrà creato automaticamente.",
 
     // Chat
     chat_placeholder: "Scrivi qui...",
