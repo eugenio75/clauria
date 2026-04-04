@@ -16,10 +16,13 @@ export type Database = {
     Tables: {
       intus_context: {
         Row: {
+          active_companion: string | null
           current_emotional_theme: string | null
+          daily_mood: number | null
           id: string
           improvement_detected: boolean | null
           last_session_at: string | null
+          mood_history: Json | null
           next_session_hook: string | null
           ongoing_situation: string | null
           pending_decisions: Json | null
@@ -36,10 +39,13 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          active_companion?: string | null
           current_emotional_theme?: string | null
+          daily_mood?: number | null
           id?: string
           improvement_detected?: boolean | null
           last_session_at?: string | null
+          mood_history?: Json | null
           next_session_hook?: string | null
           ongoing_situation?: string | null
           pending_decisions?: Json | null
@@ -56,10 +62,13 @@ export type Database = {
           user_id: string
         }
         Update: {
+          active_companion?: string | null
           current_emotional_theme?: string | null
+          daily_mood?: number | null
           id?: string
           improvement_detected?: boolean | null
           last_session_at?: string | null
+          mood_history?: Json | null
           next_session_hook?: string | null
           ongoing_situation?: string | null
           pending_decisions?: Json | null
