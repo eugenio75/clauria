@@ -35,6 +35,8 @@ const translations = {
     login_error_email: "Non riesco a inviare la mail in questo momento. Riprova tra qualche minuto.",
     login_error_otp_invalid: "Codice non valido o scaduto. Riprova.",
     login_email_hint: "Non hai un account? Inserisci la tua email e riceverai un codice di accesso. Se è la prima volta, il tuo account verrà creato automaticamente.",
+    login_safe_space: "Uno spazio solo tuo.",
+    login_privacy_line: "Nessuna pubblicità. Nessun dato venduto. Solo tu.",
 
     // Chat
     chat_placeholder: "Scrivi qui...",
