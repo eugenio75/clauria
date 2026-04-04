@@ -368,7 +368,6 @@ const Index = () => {
         body: {
           messages: allMessages
             .filter((m) => m.sender === "ai" || m.sender === "user")
-            .slice(-10)
             .map((m) => ({
               role: m.sender === "ai" ? "assistant" : "user",
               content: m.content,
