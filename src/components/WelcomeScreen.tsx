@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "../i18n/LanguageContext";
-import { COMPANIONS } from "../types/companion";
+
 
 interface WelcomeScreenProps {
   onComplete: () => void;
@@ -106,33 +106,6 @@ const WelcomeScreen = ({ onComplete }: WelcomeScreenProps) => {
                 <p className="text-foreground text-2xl leading-[2] font-display mt-2">
                   {t("welcome_p1_l2")}
                 </p>
-              </>
-            ) : page === 2 ? (
-              <>
-                {pages[page].lines.map((line, i) => (
-                  <p key={i} className="text-foreground text-xl leading-[2] font-display">
-                    {line}
-                  </p>
-                ))}
-
-                {/* Companion preview cards */}
-                <div className="flex gap-3 overflow-x-auto py-4 px-1 scrollbar-hide mt-4">
-                  {COMPANIONS.map((c) => (
-                    <motion.div
-                      key={c.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 + COMPANIONS.indexOf(c) * 0.1 }}
-                      className={`flex-shrink-0 bg-gradient-to-br ${c.bgGradient} rounded-xl px-4 py-3 text-center min-w-[100px] border border-white/40 shadow-sm`}
-                    >
-                      <span className="text-2xl block mb-1" style={{ color: c.color }}>{c.emoji}</span>
-                      <p className="text-xs font-medium text-foreground">{c.name}</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {lang === "it" ? c.tagline : c.taglineEn}
-                      </p>
-                    </motion.div>
-                  ))}
-                </div>
               </>
             ) : (
               pages[page].lines.map((line, i) => (
