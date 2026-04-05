@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "../i18n/LanguageContext";
-import { COMPANIONS } from "../types/companion";
+
 
 interface WelcomeScreenProps {
   onComplete: () => void;
