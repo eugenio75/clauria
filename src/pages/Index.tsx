@@ -450,23 +450,6 @@ const Index = () => {
     }
   };
 
-  const handleCompanionChange
-    sessionStorage.setItem("intus_mood_date", new Date().toDateString());
-    if (user) {
-      try {
-        await supabase.from("intus_context").upsert(
-          {
-            user_id: user.id,
-            daily_mood: mood,
-          },
-          { onConflict: "user_id" }
-        );
-      } catch (err) {
-        console.error("Failed to save mood:", err);
-      }
-    }
-  };
-
   const handleCompanionChange = async (id: Companion["id"]) => {
     setActiveCompanion(id);
     if (user) {
