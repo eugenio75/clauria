@@ -123,8 +123,7 @@ const Index = () => {
     if (profile.name && profile.ageRange && profile.lifeContext) {
       setProfile(prev => ({ ...prev, onboardingComplete: true }));
       setAppPhase("conversation");
-      const welcomeMsg = `Ciao ${profile.name}. Sono qui. Di cosa hai bisogno oggi?`;
-      setTimeout(() => addAIMessage(welcomeMsg), 500);
+      sendToAI([], undefined);
       return;
     }
     setAppPhase("onboarding");
