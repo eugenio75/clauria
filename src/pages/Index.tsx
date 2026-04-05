@@ -450,8 +450,7 @@ const Index = () => {
     }
   };
 
-  const handleMoodSelect = async (mood: number) => {
-    setShowMoodCheckIn(false);
+  const handleCompanionChange
     sessionStorage.setItem("intus_mood_date", new Date().toDateString());
     if (user) {
       try {
