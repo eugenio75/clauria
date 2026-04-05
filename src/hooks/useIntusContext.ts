@@ -53,7 +53,6 @@ export function useIntusContext() {
     await supabase.from("intus_context").upsert(
       {
         user_id: userId,
-        session_count: 1,
         last_session_at: new Date().toISOString(),
       },
       { onConflict: "user_id" }

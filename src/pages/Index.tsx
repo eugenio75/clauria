@@ -14,7 +14,6 @@ import UnsentLetter from "../components/UnsentLetter";
 import LoginScreen from "../components/LoginScreen";
 import WelcomeScreen from "../components/WelcomeScreen";
 import CompanionSelector from "../components/CompanionSelector";
-import MoodCheckIn from "../components/MoodCheckIn";
 import { useIntusAuth } from "../hooks/useIntusAuth";
 import { useIntusContext } from "../hooks/useIntusContext";
 import { useLanguage } from "../i18n/LanguageContext";
@@ -64,10 +63,9 @@ const Index = () => {
   const [skipLogin, setSkipLogin] = useState(false);
   const [checkingProfile, setCheckingProfile] = useState(false);
 
-  // Companion & mood state
+  // Companion state
   const [activeCompanion, setActiveCompanion] = useState<Companion["id"]>("clauria");
   const [showCompanionSelector, setShowCompanionSelector] = useState(false);
-  const [showMoodCheckIn, setShowMoodCheckIn] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const { user, loading, isReady } = useIntusAuth();
@@ -186,38 +184,8 @@ const Index = () => {
         if (greetingSentRef.current) return;
         greetingSentRef.current = true;
 
-        // Check if mood check-in should show
-        const lastMoodDate = sessionStorage.getItem("intus_mood_date");
-        const today = new Date().toDateString();
-        if (lastMoodDate !== today) {
-          setShowMoodCheckIn(true);
-        }
-
-        let welcomeMsg: string;
-        const reentryAlreadyShown = sessionStorage.getItem("intus_reentry_shown") === "true";
-        const sanitizeHookInline = (s: string): string | null => {
-          if (!s) return null;
-          if (/\b(developing|conflict|app-based|co-founder|evangelization|recurring_theme|session_count|emotional_theme|CONTEXT|UPDATE|MODE \d|PHASE \d)\b/i.test(s)) return null;
-          if (s.includes('{') || s.includes('[') || s.includes(':')) return null;
-          return s;
-        };
-        if (!reentryAlreadyShown && ctx.next_session_hook) {
-          const safeHook = sanitizeHookInline(ctx.next_session_hook);
-          welcomeMsg = safeHook || `Bentornato/a ${ctx.user_name}. Come stai oggi?`;
-          sessionStorage.setItem("intus_reentry_shown", "true");
-        } else if (!reentryAlreadyShown && ctx.step_proposed) {
-          const safeStep = sanitizeHookInline(ctx.step_proposed);
-          welcomeMsg = safeStep
-            ? `Bentornato/a ${ctx.user_name}. L'ultima volta avevi deciso di ${safeStep}. Com'è andata?`
-            : `Bentornato/a ${ctx.user_name}. Come stai oggi?`;
-          sessionStorage.setItem("intus_reentry_shown", "true");
-        } else if (!reentryAlreadyShown && (ctx.recurring_theme_count || 0) >= 3) {
-          welcomeMsg = `Ciao ${ctx.user_name}. Ultimamente parliamo spesso di qualcosa di simile. Vuoi provare un approccio diverso questa volta?`;
-          sessionStorage.setItem("intus_reentry_shown", "true");
-        } else {
-          welcomeMsg = `Ciao ${ctx.user_name}. Sono qui. Di cosa hai bisogno oggi?`;
-        }
-        setTimeout(() => addAIMessage(welcomeMsg), 500);
+        // Let AI generate the opening message with full context
+        sendToAI([], undefined);
         return;
       }
     } catch {
@@ -281,34 +249,8 @@ const Index = () => {
           if (greetingSentRef.current) return;
           greetingSentRef.current = true;
 
-          // Check mood
-          const lastMoodDate = sessionStorage.getItem("intus_mood_date");
-          const today = new Date().toDateString();
-          if (lastMoodDate !== today) {
-            setShowMoodCheckIn(true);
-          }
-
-          let welcomeMsg: string;
-          if (!reentryAlreadyShown && showBentornato && ctx.next_session_hook) {
-            const safeHook = sanitizeHook(ctx.next_session_hook);
-            welcomeMsg = safeHook || `Bentornato/a ${ctx.user_name}. Come stai oggi?`;
-            sessionStorage.setItem("intus_reentry_shown", "true");
-          } else if (!reentryAlreadyShown && showBentornato && ctx.step_proposed) {
-            const safeStep = sanitizeHook(ctx.step_proposed);
-            welcomeMsg = safeStep
-              ? `Bentornato/a ${ctx.user_name}. L'ultima volta avevi deciso di ${safeStep}. Com'è andata?`
-              : `Bentornato/a ${ctx.user_name}. Come stai oggi?`;
-            sessionStorage.setItem("intus_reentry_shown", "true");
-          } else if (!reentryAlreadyShown && (ctx.recurring_theme_count || 0) >= 3) {
-            welcomeMsg = `Ciao ${ctx.user_name}. Ultimamente parliamo spesso di qualcosa di simile. Vuoi provare un approccio diverso questa volta?`;
-            sessionStorage.setItem("intus_reentry_shown", "true");
-          } else if (!reentryAlreadyShown && showBentornato && ctx.session_count && ctx.session_count > 1 && ctx.ongoing_situation) {
-            welcomeMsg = `Bentornato/a ${ctx.user_name}. Come stai oggi?`;
-            sessionStorage.setItem("intus_reentry_shown", "true");
-          } else {
-            welcomeMsg = `Ciao ${ctx.user_name}. Sono qui. Di cosa hai bisogno oggi?`;
-          }
-          setTimeout(() => addAIMessage(welcomeMsg), 500);
+          // Let AI generate the opening message with full context
+          sendToAI([], undefined);
         } else {
           const partialProfile = {
             name: ctx.user_name || "",
@@ -677,11 +619,6 @@ const Index = () => {
             onClose={() => setShowCompanionSelector(false)}
           />
         )}
-      </AnimatePresence>
-
-      {/* Mood Check-In */}
-      <AnimatePresence>
-        {showMoodCheckIn && <MoodCheckIn onSelect={handleMoodSelect} />}
       </AnimatePresence>
 
       {/* Silence Mode */}

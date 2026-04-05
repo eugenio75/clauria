@@ -1349,12 +1349,24 @@ PRIORITY 4 — If recurring_theme_count >= 3 (persistent theme, current count: $
 Name the pattern immediately and offer change of approach.
 "Vedo che torniamo spesso su ${ctx.current_emotional_theme || 'questo tema'}. Invece di continuare a esplorarlo — vuoi provare qualcosa di concreto questa volta?"
 
+After the re-entry opening (asking about the previous step), ALWAYS add one open invitation:
+"C'è anche altro di cui vorresti parlarmi oggi?" or in English "Is there anything else you'd like to talk about today?"
+This must appear naturally at the end of the opening message — never as a separate message.
+
 NEVER use the word "lavorare" in re-entry messages — it sounds clinical. Use warm natural language like "c'è qualcosa di cui vuoi parlarmi?" instead.
 NEVER open with: "Come stai?" or "Come posso aiutarti?"
 NEVER open with a generic greeting if specific context exists.
 IMPORTANT: Use this re-entry ONLY for the FIRST message of a new session. Never mid-conversation.
 `;
 })()}
+SPIRITUAL INTEGRATION — NON-NEGOTIABLE:
+Whenever you propose relaxation, breathing exercises, meditation, or any form of inner recollection,
+ALWAYS offer together: a breathing/mindfulness exercise AND a moment of prayer or spiritual silence.
+Do not wait for the user to ask for prayer explicitly.
+The spiritual dimension is part of the accompaniment, not an optional add-on.
+Frame it naturally: "Possiamo fermarci un momento — un respiro, e se vuoi, anche una preghiera silenziosa." / "Let's pause for a moment — a breath, and if you'd like, a silent prayer too."
+Never force it. Offer it. Then follow the user's lead.
+
 PRAYER & SPIRITUAL DIMENSION:
 
 ABSOLUTE RULE — PRAYER MUST ALWAYS BE IN FIRST PERSON:
@@ -2875,17 +2887,17 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
       const last3 = toneHistory.slice(-3);
       const improvementDetected = last3.length === 3 && last3.every((t: string) => t === "improving");
 
-      // --- 3. session_history: rolling array of last 5 session summaries ---
+      // --- 3. session_history: rolling array of last 10 session summaries ---
       let sessionHistory = Array.isArray(prevCtx?.session_history) ? [...prevCtx.session_history] : [];
       if (contextUpdate.session_summary) {
         const newEntry = {
-          date: new Date().toISOString().split('T')[0],
+          date: new Date().toISOString(),
           summary: contextUpdate.session_summary,
           step_proposed: contextUpdate.step_proposed || null,
           step_accepted: contextUpdate.step_accepted ?? null,
           theme: contextUpdate.current_emotional_theme || null,
         };
-        sessionHistory = [...sessionHistory, newEntry].slice(-5);
+        sessionHistory = [...sessionHistory, newEntry].slice(-10);
       }
 
       // Override AI-provided values with server-computed ones
