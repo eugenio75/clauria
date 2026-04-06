@@ -268,7 +268,7 @@ const Index = () => {
         setCheckingProfile(false);
       });
     }
-  }, [showSplash, isReady, isAuthenticated, user, loadContext, addAIMessage]);
+  }, [showSplash, showWelcome, isReady, isAuthenticated, user, loadContext, addAIMessage]);
 
   const mountUserRef = useRef<string | undefined>(undefined);
   const didCaptureMount = useRef(false);
