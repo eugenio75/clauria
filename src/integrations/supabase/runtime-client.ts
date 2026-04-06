@@ -1,7 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
 
-const viteEnv = import.meta.env ?? {};
+type RuntimeEnv = ImportMetaEnv & {
+  VITE_SUPABASE_URL?: string;
+  VITE_SUPABASE_PUBLISHABLE_KEY?: string;
+};
+
+const viteEnv = import.meta.env as RuntimeEnv;
 
 const SUPABASE_URL =
   viteEnv.VITE_SUPABASE_URL?.trim() ||
