@@ -204,6 +204,7 @@ const Index = () => {
 
   const hasCheckedRef = useRef(false);
   useEffect(() => {
+    if (showSplash || showWelcome) return;
     if (isReady && isAuthenticated && !hasCheckedRef.current) {
       hasCheckedRef.current = true;
       setCheckingProfile(true);
@@ -267,7 +268,7 @@ const Index = () => {
         setCheckingProfile(false);
       });
     }
-  }, [showSplash, isReady, isAuthenticated, user, loadContext, addAIMessage]);
+  }, [showSplash, showWelcome, isReady, isAuthenticated, user, loadContext, addAIMessage]);
 
   const mountUserRef = useRef<string | undefined>(undefined);
   const didCaptureMount = useRef(false);
@@ -298,11 +299,7 @@ const Index = () => {
     }
   }, [isReady, user, startConversation]);
 
-  useEffect(() => {
-    if (isReady && isAuthenticated && showSplash) {
-      setShowSplash(false);
-    }
-  }, [isReady, isAuthenticated, showSplash]);
+  // Splash completes via its own animation timer, not skipped for authenticated users
 
   useEffect(() => {
     scrollToBottom();
