@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/runtime-client";
 import { useLanguage } from "../i18n/LanguageContext";
 
 type AuthStep = "choose" | "email" | "otp";
