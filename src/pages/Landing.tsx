@@ -90,16 +90,6 @@ const Landing = () => {
           {t("landing_for_whom")}
         </motion.p>
 
-        {/* Description */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 1.1 }}
-          className="text-sm text-muted-foreground/80 leading-relaxed max-w-[400px]"
-        >
-          {t("landing_description")}
-        </motion.p>
-
         {/* Disclaimer */}
         <motion.p
           initial={{ opacity: 0 }}
