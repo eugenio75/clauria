@@ -298,11 +298,7 @@ const Index = () => {
     }
   }, [isReady, user, startConversation]);
 
-  useEffect(() => {
-    if (isReady && isAuthenticated && showSplash) {
-      setShowSplash(false);
-    }
-  }, [isReady, isAuthenticated, showSplash]);
+  // Splash completes via its own animation timer, not skipped for authenticated users
 
   useEffect(() => {
     scrollToBottom();
