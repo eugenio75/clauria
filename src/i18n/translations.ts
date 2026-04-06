@@ -113,7 +113,7 @@ const translations = {
 
     // Landing page
     landing_tagline: "Non sei solo.",
-    landing_for_whom: "Uno spazio di ascolto per chiunque attraversi qualcosa di difficile — o voglia condividere qualcosa di bello.",
+    landing_for_whom: "Clauria è qui per te. Ti ascolta. Ti illumina. Ti accompagna — nelle difficoltà e nelle gioie.",
     landing_description: "Puoi dirmi quello che ti turba, ciò che non riesci a risolvere, quello che tieni dentro. Ma anche le gioie che vorresti condividere.",
     landing_disclaimer: "Clauria ascolta, accompagna e aiuta a fare chiarezza. Non sostituisce un medico, uno psicologo o una guida spirituale.",
     landing_cta: "Inizia",
@@ -232,7 +232,7 @@ const translations = {
 
     // Landing page
     landing_tagline: "You are not alone.",
-    landing_for_whom: "A listening space for anyone going through something difficult — or wanting to share something beautiful.",
+    landing_for_whom: "Clauria is here for you. She listens. She illuminates. She walks with you — through hardship and through joy.",
     landing_description: "You can tell me what troubles you, what you cannot resolve, what you keep inside. But also the joys you would like to share.",
     landing_disclaimer: "Clauria listens, accompanies, and helps bring clarity. It does not replace a doctor, a psychologist, or a spiritual guide.",
     landing_cta: "Start",
