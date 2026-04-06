@@ -5,7 +5,12 @@ import { useLanguage } from "../i18n/LanguageContext";
 
 type AuthStep = "choose" | "email" | "otp";
 
-const LoginScreen = () => {
+interface LoginScreenProps {
+  hasGuestSession?: boolean;
+  onContinueAsGuest?: () => void;
+}
+
+const LoginScreen = ({ hasGuestSession = false, onContinueAsGuest }: LoginScreenProps) => {
   const [step, setStep] = useState<AuthStep>("choose");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -16,11 +21,17 @@ const LoginScreen = () => {
   const clearError = () => setInlineError(null);
 
   const handleGuest = async () => {
-    setLoading(true);
     clearError();
+    if (hasGuestSession) {
+      onContinueAsGuest?.();
+      return;
+    }
+
+    setLoading(true);
     try {
       const { error } = await supabase.auth.signInAnonymously();
       if (error) throw error;
+      onContinueAsGuest?.();
     } catch (err) {
       console.error(err);
       setInlineError(t("login_error_generic"));
