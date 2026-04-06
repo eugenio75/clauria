@@ -113,9 +113,9 @@ const translations = {
 
     // Landing page
     landing_tagline: "Non sei solo.",
-    landing_for_whom: "Clauria è qui per te. Ti ascolta. Ti illumina. Ti accompagna — nelle difficoltà e nelle gioie.",
+    landing_for_whom: "Clauria è qui per te.\nTi ascolta, ti illumina e ti accompagna, nelle difficoltà e nelle gioie.",
     landing_description: "Puoi dirmi quello che ti turba, ciò che non riesci a risolvere, quello che tieni dentro. Ma anche le gioie che vorresti condividere.",
-    landing_disclaimer: "Clauria ascolta, accompagna e aiuta a fare chiarezza, custodendo anche la gioia. Non sostituisce le relazioni umane, ma le rafforza e le rende più possibili. Non sostituisce uno psicologo né una guida spirituale.",
+    landing_disclaimer: "Non sostituisce le relazioni umane, ma le rafforza e le rende più possibili.\nNon sostituisce uno psicologo né una guida spirituale.",
     landing_cta: "Inizia",
     landing_about: "Chi siamo",
     landing_footer: "Clauria è un prodotto AzarLabs — Tenks S.r.l.s.",
@@ -233,9 +233,9 @@ const translations = {
 
     // Landing page
     landing_tagline: "You are not alone.",
-    landing_for_whom: "Clauria is here for you. She listens. She illuminates. She walks with you — through hardship and through joy.",
+    landing_for_whom: "Clauria is here for you.\nShe listens, illuminates and walks with you, through hardship and through joy.",
     landing_description: "You can tell me what troubles you, what you cannot resolve, what you keep inside. But also the joys you would like to share.",
-    landing_disclaimer: "Clauria listens, accompanies and helps bring clarity, cherishing joy along the way. It does not replace human relationships — it strengthens them and makes them more possible. It does not replace a psychologist or a spiritual guide.",
+    landing_disclaimer: "It does not replace human relationships — it strengthens them and makes them more possible.\nIt does not replace a psychologist or a spiritual guide.",
     landing_cta: "Start",
     landing_about: "About",
     landing_footer: "Clauria is a product of AzarLabs — Tenks S.r.l.s.",
