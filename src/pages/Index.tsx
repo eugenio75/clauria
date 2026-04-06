@@ -17,7 +17,7 @@ import CompanionSelector from "../components/CompanionSelector";
 import { useIntusAuth } from "../hooks/useIntusAuth";
 import { useIntusContext } from "../hooks/useIntusContext";
 import { useLanguage } from "../i18n/LanguageContext";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/runtime-client";
 import { toast } from "sonner";
 import { COMPANIONS, Companion } from "../types/companion";
 
