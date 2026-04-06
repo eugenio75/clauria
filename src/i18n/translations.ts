@@ -110,6 +110,15 @@ const translations = {
     onboarding_q2: (name: string) => `Ciao ${name}, sono Clauria. Quanti anni hai?`,
     onboarding_q3: "E nella vita di tutti i giorni, cosa fai?\nLavori, sei in un momento di cambiamento, stai a casa...",
     onboarding_q4_question: "E in questo momento — c'è qualcosa che ti turba, una decisione da prendere, o magari qualcosa di bello che vuoi condividere?",
+
+    // Landing page
+    landing_tagline: "Non sei solo.",
+    landing_for_whom: "Uno spazio di ascolto per chiunque attraversi qualcosa di difficile — o voglia condividere qualcosa di bello.",
+    landing_description: "Puoi dirmi quello che ti turba, ciò che non riesci a risolvere, quello che tieni dentro. Ma anche le gioie che vorresti condividere.",
+    landing_disclaimer: "Clauria ascolta, accompagna e aiuta a fare chiarezza. Non sostituisce un medico, uno psicologo o una guida spirituale.",
+    landing_cta: "Inizia",
+    landing_footer: "Clauria è un prodotto AzarLabs — Tenks S.r.l.s.",
+    landing_privacy: "Privacy Policy",
   },
   en: {
     // Splash
@@ -220,6 +229,15 @@ const translations = {
     onboarding_q2: (name: string) => `Hi ${name}, I'm Clauria. How old are you?`,
     onboarding_q3: "And in your daily life, what do you do?\nWork, going through a transition, staying at home...",
     onboarding_q4_question: "And right now — is there something troubling you, a decision to make, or perhaps something beautiful you want to share?",
+
+    // Landing page
+    landing_tagline: "You are not alone.",
+    landing_for_whom: "A listening space for anyone going through something difficult — or wanting to share something beautiful.",
+    landing_description: "You can tell me what troubles you, what you cannot resolve, what you keep inside. But also the joys you would like to share.",
+    landing_disclaimer: "Clauria listens, accompanies, and helps bring clarity. It does not replace a doctor, a psychologist, or a spiritual guide.",
+    landing_cta: "Start",
+    landing_footer: "Clauria is a product of AzarLabs — Tenks S.r.l.s.",
+    landing_privacy: "Privacy Policy",
   },
 } as const;
 
