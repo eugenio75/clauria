@@ -116,6 +116,12 @@ const Landing = () => {
           >
             {t("landing_cta")}
           </button>
+          <button
+            disabled
+            className="font-display text-base px-8 py-3 rounded-xl tracking-wide text-muted-foreground bg-muted/60 cursor-default opacity-70"
+          >
+            {t("landing_about")}
+          </button>
         </motion.div>
       </div>
 
