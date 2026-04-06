@@ -37,10 +37,12 @@ interface UserProfile {
 }
 
 const Index = () => {
-  const [showSplash, setShowSplash] = useState(!window.location.hash.includes("access_token"));
+  const forceIntroRef = useRef(sessionStorage.getItem("intus_force_intro") === "true");
+  const forceIntro = forceIntroRef.current;
+  const [showSplash, setShowSplash] = useState(forceIntro || !window.location.hash.includes("access_token"));
   const [splashFadingOut, setSplashFadingOut] = useState(false);
   const welcomeAlreadySeen = localStorage.getItem("intus_welcome_seen") === "true";
-  const [showWelcome, setShowWelcome] = useState(!welcomeAlreadySeen);
+  const [showWelcome, setShowWelcome] = useState(forceIntro || !welcomeAlreadySeen);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -71,6 +73,7 @@ const Index = () => {
   const { user, loading, isReady } = useIntusAuth();
   const isGuest = !!user?.is_anonymous;
   const isAuthenticated = !!user;
+  const canEnterAuthenticatedFlow = isAuthenticated && (!isGuest || skipLogin);
   const { loadContext, saveProfile, resetContext } = useIntusContext();
   const { t, lang } = useLanguage();
 
@@ -202,10 +205,16 @@ const Index = () => {
     }, 400);
   }, []);
 
+  useEffect(() => {
+    if (forceIntro) {
+      sessionStorage.removeItem("intus_force_intro");
+    }
+  }, [forceIntro]);
+
   const hasCheckedRef = useRef(false);
   useEffect(() => {
     if (showSplash || showWelcome) return;
-    if (isReady && isAuthenticated && !hasCheckedRef.current) {
+    if (isReady && canEnterAuthenticatedFlow && !hasCheckedRef.current) {
       hasCheckedRef.current = true;
       setCheckingProfile(true);
       
@@ -268,7 +277,7 @@ const Index = () => {
         setCheckingProfile(false);
       });
     }
-  }, [showSplash, showWelcome, isReady, isAuthenticated, user, loadContext, addAIMessage]);
+  }, [showSplash, showWelcome, isReady, canEnterAuthenticatedFlow, user, loadContext, addAIMessage]);
 
   const mountUserRef = useRef<string | undefined>(undefined);
   const didCaptureMount = useRef(false);
@@ -499,8 +508,16 @@ const Index = () => {
     return <WelcomeScreen onComplete={handleWelcomeComplete} />;
   }
 
-  if (!isAuthenticated) {
-    return <LoginScreen />;
+  if (!isAuthenticated || (isGuest && !skipLogin)) {
+    return (
+      <LoginScreen
+        hasGuestSession={isGuest}
+        onContinueAsGuest={() => {
+          hasCheckedRef.current = false;
+          setSkipLogin(true);
+        }}
+      />
+    );
   }
 
   return (

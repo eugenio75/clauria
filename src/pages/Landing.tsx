@@ -6,6 +6,11 @@ const Landing = () => {
   const navigate = useNavigate();
   const { t, lang, setLang } = useLanguage();
 
+  const handleStart = () => {
+    sessionStorage.setItem("intus_force_intro", "true");
+    navigate("/app");
+  };
+
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-6 relative"
@@ -115,7 +120,7 @@ const Landing = () => {
           transition={{ duration: 0.6, delay: 1.5 }}
         >
           <button
-            onClick={() => navigate("/app")}
+            onClick={handleStart}
             className="font-display text-lg px-10 py-3.5 rounded-xl tracking-wide transition-opacity hover:opacity-90 text-primary-foreground shadow-lg"
             style={{
               background:
