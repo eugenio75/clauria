@@ -204,6 +204,7 @@ const Index = () => {
 
   const hasCheckedRef = useRef(false);
   useEffect(() => {
+    if (showSplash || showWelcome) return;
     if (isReady && isAuthenticated && !hasCheckedRef.current) {
       hasCheckedRef.current = true;
       setCheckingProfile(true);
