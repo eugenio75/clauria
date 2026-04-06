@@ -15,27 +15,35 @@ const Landing = () => {
       }}
     >
       {/* Language selector */}
-      <div className="absolute top-6 right-6 flex gap-2">
+      <div className="absolute top-6 right-6 flex items-center gap-3">
         <button
-          onClick={() => setLang("it")}
-          className={`text-sm font-medium px-3 py-1.5 rounded-lg transition-colors ${
-            lang === "it"
-              ? "bg-warm-amber text-primary-foreground"
-              : "bg-muted text-muted-foreground hover:bg-muted/80"
-          }`}
+          disabled
+          className="text-sm font-medium px-3 py-1.5 rounded-lg text-muted-foreground bg-muted/60 cursor-default opacity-70 transition-colors"
         >
-          IT
+          {t("landing_about")}
         </button>
-        <button
-          onClick={() => setLang("en")}
-          className={`text-sm font-medium px-3 py-1.5 rounded-lg transition-colors ${
-            lang === "en"
-              ? "bg-warm-amber text-primary-foreground"
-              : "bg-muted text-muted-foreground hover:bg-muted/80"
-          }`}
-        >
-          EN
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setLang("it")}
+            className={`text-sm font-medium px-3 py-1.5 rounded-lg transition-colors ${
+              lang === "it"
+                ? "bg-warm-amber text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            IT
+          </button>
+          <button
+            onClick={() => setLang("en")}
+            className={`text-sm font-medium px-3 py-1.5 rounded-lg transition-colors ${
+              lang === "en"
+                ? "bg-warm-amber text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            EN
+          </button>
+        </div>
       </div>
 
       <div className="max-w-[520px] w-full flex flex-col items-center text-center space-y-8 py-16">
@@ -115,12 +123,6 @@ const Landing = () => {
             }}
           >
             {t("landing_cta")}
-          </button>
-          <button
-            disabled
-            className="font-display text-base px-8 py-3 rounded-xl tracking-wide text-muted-foreground bg-muted/60 cursor-default opacity-70"
-          >
-            {t("landing_about")}
           </button>
         </motion.div>
       </div>
