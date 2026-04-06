@@ -2774,6 +2774,8 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
         },
         body: JSON.stringify({
           model: "gpt-4o",
+          temperature: 0.7,
+          max_tokens: 400,
           messages: [
             { role: "system", content: finalSystemPrompt },
             ...messages,
