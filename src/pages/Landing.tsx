@@ -93,7 +93,7 @@ const Landing = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.9 }}
-          className="text-base text-muted-foreground leading-relaxed max-w-[420px]"
+          className="text-base text-muted-foreground leading-relaxed max-w-[420px] whitespace-pre-line"
         >
           {t("landing_for_whom")}
         </motion.p>
@@ -103,7 +103,7 @@ const Landing = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 1.3 }}
-          className="text-xs text-muted-foreground/60 leading-relaxed max-w-[380px]"
+          className="text-xs text-muted-foreground/60 leading-relaxed max-w-[380px] whitespace-pre-line"
         >
           {t("landing_disclaimer")}
         </motion.p>
