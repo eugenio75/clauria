@@ -2932,40 +2932,75 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
     let rawText: string;
 
     if (useOllama) {
-      // ─── Ollama Mode ─────────────────────────────────────
+      // ─── Ollama Mode (with OpenAI fallback) ──────────────
       const OLLAMA_URL = Deno.env.get("OLLAMA_URL");
-      if (!OLLAMA_URL) {
-        throw new Error("OLLAMA_URL is not configured but OLLAMA_ENABLED is true");
+      const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+
+      let usedFallback = false;
+
+      try {
+        if (!OLLAMA_URL) throw new Error("OLLAMA_URL not configured");
+
+        console.log("Using Ollama backend:", OLLAMA_URL, "model: azarai");
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 25000);
+
+        const ollamaResponse = await fetch(`${OLLAMA_URL}/api/chat`, {
+          method: "POST",
+          signal: controller.signal,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "azarai",
+            stream: false,
+            options: { num_predict: 300, num_ctx: 2048 },
+            messages: [
+              { role: "system", content: finalSystemPrompt },
+              ...messages.slice(-6),
+            ],
+          }),
+        });
+
+        clearTimeout(timeout);
+
+        if (!ollamaResponse.ok) throw new Error("Ollama error");
+        const ollamaData = await ollamaResponse.json();
+        rawText = extractTextFromAIContent(
+          ollamaData.message?.content ?? ""
+        ).trim();
+        if (!rawText) throw new Error("Empty response");
+
+      } catch (err) {
+        console.log("Ollama fallback to OpenAI:", (err as Error).message);
+        usedFallback = true;
+
+        const openaiResponse = await fetch(
+          "https://api.openai.com/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${OPENAI_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "gpt-4o-mini",
+              temperature: 0.7,
+              max_tokens: 300,
+              messages: [
+                { role: "system", content: finalSystemPrompt },
+                ...messages.slice(-6),
+              ],
+            }),
+          }
+        );
+
+        const openaiData = await openaiResponse.json();
+        rawText = extractTextFromAIContent(
+          openaiData.choices?.[0]?.message?.content ?? ""
+        ).trim();
       }
 
-      console.log("Using Ollama backend:", OLLAMA_URL, "model: azarai");
-
-      const ollamaResponse = await fetch(`${OLLAMA_URL}/api/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "azarai",
-          stream: false,
-          options: {
-            num_predict: 200,
-            num_ctx: 2048,
-            temperature: 0.7,
-          },
-          messages: [
-            { role: "system", content: finalSystemPrompt },
-            ...messages.slice(-6),
-          ],
-        }),
-      });
-
-      if (!ollamaResponse.ok) {
-        const t = await ollamaResponse.text();
-        console.error("Ollama error:", ollamaResponse.status, t);
-        throw new Error(`Ollama server error: ${ollamaResponse.status}`);
-      }
-
-      const ollamaData = await ollamaResponse.json();
-      rawText = extractTextFromAIContent(ollamaData.message?.content ?? "").trim();
+      console.log("AI provider used:", usedFallback ? "OpenAI" : "Ollama");
     } else {
       // ─── Lovable Gateway Mode (default) ──────────────────
       const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
