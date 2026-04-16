@@ -2846,10 +2846,8 @@ You are now speaking as Leo, not Clauria. Leo brings lightness, healthy humor, a
     };
     const companionOverlay = companionOverlays[companionId || "clauria"] || "";
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
-    }
+    // ─── AI Provider Switch ───────────────────────────────────
+    const useOllama = Deno.env.get("OLLAMA_ENABLED") === "true";
 
     const systemPrompt = buildSystemPrompt(userContext || {}, localHour, isNewSession, language);
 
@@ -2931,52 +2929,92 @@ IF emotional_entry_state suggests joy, gratitude, a beautiful moment, good news:
 IMPORTANT: Never use a generic closing. Always reference something specific from the onboarding. The user must feel that CLAURIA was listening — not running a script.`;
     }
 
-    const response = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
-      {
+    let rawText: string;
+
+    if (useOllama) {
+      // ─── Ollama Mode ─────────────────────────────────────
+      const OLLAMA_URL = Deno.env.get("OLLAMA_URL");
+      if (!OLLAMA_URL) {
+        throw new Error("OLLAMA_URL is not configured but OLLAMA_ENABLED is true");
+      }
+
+      console.log("Using Ollama backend:", OLLAMA_URL, "model: azarai");
+
+      const ollamaResponse = await fetch(`${OLLAMA_URL}/api/chat`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          temperature: 0.7,
+          model: "azarai",
+          stream: false,
           messages: [
             { role: "system", content: finalSystemPrompt },
             ...messages,
           ],
         }),
-      }
-    );
+      });
 
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded, please try again later." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+      if (!ollamaResponse.ok) {
+        const t = await ollamaResponse.text();
+        console.error("Ollama error:", ollamaResponse.status, t);
+        throw new Error(`Ollama server error: ${ollamaResponse.status}`);
       }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Payment required, please add funds." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+
+      const ollamaData = await ollamaResponse.json();
+      rawText = extractTextFromAIContent(ollamaData.message?.content ?? "").trim();
+    } else {
+      // ─── Lovable Gateway Mode (default) ──────────────────
+      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+      if (!LOVABLE_API_KEY) {
+        throw new Error("LOVABLE_API_KEY is not configured");
       }
-      const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
-      return new Response(
-        JSON.stringify({ error: "AI gateway error" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+
+      const response = await fetch(
+        "https://ai.gateway.lovable.dev/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash",
+            temperature: 0.7,
+            messages: [
+              { role: "system", content: finalSystemPrompt },
+              ...messages,
+            ],
+          }),
+        }
       );
-    }
 
-    const data = await response.json();
-    const rawContent =
-      data.choices?.[0]?.message?.content ??
-      data.choices?.[0]?.delta?.content ??
-      "";
-    const rawText = extractTextFromAIContent(rawContent).trim();
+      if (!response.ok) {
+        if (response.status === 429) {
+          return new Response(
+            JSON.stringify({ error: "Rate limit exceeded, please try again later." }),
+            { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        if (response.status === 402) {
+          return new Response(
+            JSON.stringify({ error: "Payment required, please add funds." }),
+            { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        const t = await response.text();
+        console.error("AI gateway error:", response.status, t);
+        return new Response(
+          JSON.stringify({ error: "AI gateway error" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const data = await response.json();
+      const rawContent =
+        data.choices?.[0]?.message?.content ??
+        data.choices?.[0]?.delta?.content ??
+        "";
+      rawText = extractTextFromAIContent(rawContent).trim();
+    }
 
     if (!rawText) {
       console.error("AI returned no visible text content");
