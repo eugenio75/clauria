@@ -2952,8 +2952,8 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
             temperature: 0.7,
           },
           messages: [
-            { role: "system", content: finalSystemPrompt.substring(0, 1000) },
-            ...messages.slice(-4),
+            { role: "system", content: finalSystemPrompt },
+            ...messages.slice(-6),
           ],
         }),
       });
