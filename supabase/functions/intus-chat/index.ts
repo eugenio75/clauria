@@ -2940,8 +2940,8 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "openai/gpt-5",
-          max_completion_tokens: 400,
+          model: "google/gemini-2.5-flash",
+          temperature: 0.7,
           messages: [
             { role: "system", content: finalSystemPrompt },
             ...messages,
