@@ -2972,6 +2972,8 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
     }
 
     const data = await response.json();
+    console.log("AI raw response keys:", JSON.stringify(Object.keys(data)));
+    console.log("AI choices[0].message:", JSON.stringify(data.choices?.[0]?.message).substring(0, 500));
     const rawContent =
       data.choices?.[0]?.message?.content ??
       data.choices?.[0]?.delta?.content ??
