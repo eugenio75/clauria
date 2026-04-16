@@ -2941,7 +2941,6 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
         },
         body: JSON.stringify({
           model: "openai/gpt-5",
-          temperature: 0.7,
           max_completion_tokens: 400,
           messages: [
             { role: "system", content: finalSystemPrompt },
