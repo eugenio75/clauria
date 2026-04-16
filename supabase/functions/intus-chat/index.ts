@@ -2946,9 +2946,14 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
         body: JSON.stringify({
           model: "azarai",
           stream: false,
+          options: {
+            num_predict: 200,
+            num_ctx: 2048,
+            temperature: 0.7,
+          },
           messages: [
-            { role: "system", content: finalSystemPrompt },
-            ...messages,
+            { role: "system", content: finalSystemPrompt.substring(0, 1000) },
+            ...messages.slice(-4),
           ],
         }),
       });
