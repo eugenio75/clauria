@@ -26,6 +26,7 @@ interface Message {
   content: string;
   sender: "ai" | "user";
   crisis?: boolean;
+  returnToSarai?: boolean;
 }
 
 interface UserProfile {
@@ -343,6 +344,11 @@ const Index = () => {
           isNewSession,
           language: lang,
           companionId: activeCompanion,
+          returnTo:
+            sessionStorage.getItem("return_to") === "sarai" &&
+            sessionStorage.getItem("intus_sarai_bridge_shown") !== "true"
+              ? "sarai"
+              : undefined,
           ...(onboardingData ? { onboardingData } : {}),
         },
       });
@@ -353,17 +359,24 @@ const Index = () => {
 
       const cleanedText = cleanAIText(data.text);
 
-      if (data.isCrisisLevel3) {
-        setMessages((prev) => [
-          ...prev,
-          { id: Date.now().toString(), content: cleanedText, sender: "ai", crisis: true },
-        ]);
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          { id: Date.now().toString(), content: cleanedText, sender: "ai" },
-        ]);
+      // Only show the bridge once per session
+      const showBridge =
+        !!data.showReturnToSarai &&
+        sessionStorage.getItem("intus_sarai_bridge_shown") !== "true";
+      if (showBridge) {
+        sessionStorage.setItem("intus_sarai_bridge_shown", "true");
       }
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          content: cleanedText,
+          sender: "ai",
+          crisis: !!data.isCrisisLevel3,
+          returnToSarai: showBridge,
+        },
+      ]);
 
       if (cleanedText.includes("fermarci un momento in silenzio")) {
         setSilenceModeOffered(true);
