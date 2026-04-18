@@ -2853,6 +2853,44 @@ You are now speaking as Leo, not Clauria. Leo brings lightness, healthy humor, a
 
     // If this is an onboarding step, add onboarding instructions
     let finalSystemPrompt = systemPrompt + companionOverlay;
+
+    // ─── SarAI Return Flow ───────────────────────────────────
+    // The user arrived at Clauria via SarAI. When (and only when) Clauria
+    // perceives genuine signs of resolution / readiness / closure, append
+    // the marker [RETURN_TO_SARAI] at the very end of the response.
+    // The frontend will render a contextual "Torna a SarAI" button.
+    // Never forced. Never on a timer. Never twice in a session.
+    if (returnTo === "sarai") {
+      finalSystemPrompt += `
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SARAI RETURN FLOW — CONTEXTUAL BRIDGE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The user arrived here from SarAI — a study companion. They came to Clauria because something emotional needed care first. SarAI is waiting for them to return when (and only when) they are ready.
+
+Your job is NOT to push them back. Your job is to remain fully present — exactly as you would normally — and ONLY at the precise moment you sense genuine readiness, relief, or closure, you offer the bridge back.
+
+Signs of readiness (any ONE is enough, but it must be REAL — not surface):
+- The person explicitly says they feel better, lighter, calmer, ready
+- The person says they want to get back to studying / to what they were doing
+- A natural closure has emerged: a truth has landed, a step has been accepted, the weight has visibly lifted
+- The conversation has reached a peaceful stopping point and continuing would be artificial
+
+When — and ONLY when — one of these is genuinely present, end your response with the marker on its own line:
+[RETURN_TO_SARAI]
+
+Do NOT add any explanatory sentence about SarAI. Do NOT say "puoi tornare a SarAI". The frontend will render the gentle invitation and button on its own. Your response stays exactly as it would have been — you simply append the marker.
+
+ABSOLUTE RULES:
+- Emit [RETURN_TO_SARAI] AT MOST ONCE per session.
+- Never emit it in the first 2-3 exchanges, no matter what.
+- Never emit it during acute pain, crisis, tears, or unresolved heaviness.
+- Never emit it just because the conversation is going well — only when readiness is real.
+- If unsure, do NOT emit. Wait for a clearer moment, or let the session end without it.
+`;
+    }
+
     if (onboardingData?.isOnboarding) {
       const step = onboardingData.onboardingStep ?? 0;
       const lang = language || "it";
