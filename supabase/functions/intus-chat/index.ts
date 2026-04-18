@@ -2830,7 +2830,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, userContext, userId, localHour, onboardingData, isNewSession, language, companionId } = await req.json();
+    const { messages, userContext, userId, localHour, onboardingData, isNewSession, language, companionId, returnTo } = await req.json();
 
     // Companion personality overlay
     const companionOverlays: Record<string, string> = {
