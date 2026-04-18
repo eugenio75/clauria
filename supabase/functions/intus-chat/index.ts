@@ -3119,10 +3119,14 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
     // Parse crisis level
     const isCrisisLevel3 = rawText.includes("[CRISIS_LEVEL_3]");
 
+    // Parse SarAI return signal
+    const showReturnToSarai = rawText.includes("[RETURN_TO_SARAI]");
+
     // Clean response — strip ALL internal markers and system prompt leakage
     const cleanText = rawText
       .replace(/\[CONTEXT_UPDATE\][\s\S]*?\[\/CONTEXT_UPDATE\]/g, "")
       .replace(/\[CRISIS_LEVEL_3\]/g, "")
+      .replace(/\[RETURN_TO_SARAI\]/g, "")
       // Strip any leaked system prompt fragments
       .replace(/CONTEXT[_ ]UPDATE[_ ]REQUIRED[^.]*.?\./gi, "")
       .replace(/\[?CONTEXT[_ ]UPDATE\]?/gi, "")
