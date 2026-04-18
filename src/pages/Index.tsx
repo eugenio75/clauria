@@ -26,6 +26,7 @@ interface Message {
   content: string;
   sender: "ai" | "user";
   crisis?: boolean;
+  returnToSarai?: boolean;
 }
 
 interface UserProfile {
@@ -343,6 +344,11 @@ const Index = () => {
           isNewSession,
           language: lang,
           companionId: activeCompanion,
+          returnTo:
+            sessionStorage.getItem("return_to") === "sarai" &&
+            sessionStorage.getItem("intus_sarai_bridge_shown") !== "true"
+              ? "sarai"
+              : undefined,
           ...(onboardingData ? { onboardingData } : {}),
         },
       });
@@ -353,17 +359,24 @@ const Index = () => {
 
       const cleanedText = cleanAIText(data.text);
 
-      if (data.isCrisisLevel3) {
-        setMessages((prev) => [
-          ...prev,
-          { id: Date.now().toString(), content: cleanedText, sender: "ai", crisis: true },
-        ]);
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          { id: Date.now().toString(), content: cleanedText, sender: "ai" },
-        ]);
+      // Only show the bridge once per session
+      const showBridge =
+        !!data.showReturnToSarai &&
+        sessionStorage.getItem("intus_sarai_bridge_shown") !== "true";
+      if (showBridge) {
+        sessionStorage.setItem("intus_sarai_bridge_shown", "true");
       }
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          content: cleanedText,
+          sender: "ai",
+          crisis: !!data.isCrisisLevel3,
+          returnToSarai: showBridge,
+        },
+      ]);
 
       if (cleanedText.includes("fermarci un momento in silenzio")) {
         setSilenceModeOffered(true);
@@ -553,6 +566,19 @@ const Index = () => {
               companionEmoji={activeCompanionData.emoji}
             />
             {msg.crisis && <CrisisCard />}
+            {msg.returnToSarai && (
+              <div className="flex flex-col items-center mt-4 mb-2 gap-3">
+                <p className="text-sm text-foreground/70 italic text-center max-w-[320px]">
+                  Sei pronto a tornare? SarAI ti aspetta.
+                </p>
+                <a
+                  href="https://www.sarai.azarlabs.com?from=clauria"
+                  className="px-5 py-2.5 rounded-full bg-trust-blue text-primary-foreground text-sm font-medium shadow-md hover:opacity-90 transition-opacity"
+                >
+                  Torna a SarAI
+                </a>
+              </div>
+            )}
           </div>
         ))}
         {isTyping && <TypingIndicator />}
