@@ -566,6 +566,19 @@ const Index = () => {
               companionEmoji={activeCompanionData.emoji}
             />
             {msg.crisis && <CrisisCard />}
+            {msg.returnToSarai && (
+              <div className="flex flex-col items-center mt-4 mb-2 gap-3">
+                <p className="text-sm text-foreground/70 italic text-center max-w-[320px]">
+                  Sei pronto a tornare? SarAI ti aspetta.
+                </p>
+                <a
+                  href="https://www.sarai.azarlabs.com?from=clauria"
+                  className="px-5 py-2.5 rounded-full bg-trust-blue text-primary-foreground text-sm font-medium shadow-md hover:opacity-90 transition-opacity"
+                >
+                  Torna a SarAI
+                </a>
+              </div>
+            )}
           </div>
         ))}
         {isTyping && <TypingIndicator />}
