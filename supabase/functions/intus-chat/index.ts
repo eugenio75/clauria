@@ -3205,7 +3205,7 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
     }
 
     return new Response(
-      JSON.stringify({ text: cleanText, isCrisisLevel3, contextUpdate }),
+      JSON.stringify({ text: cleanText, isCrisisLevel3, showReturnToSarai, contextUpdate }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
