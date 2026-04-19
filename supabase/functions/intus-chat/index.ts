@@ -2852,8 +2852,9 @@ You are now speaking as Leo, not Clauria. Leo brings lightness, healthy humor, a
     let finalSystemPrompt = "";
     try {
       const lastMsg = messages[messages.length - 1]?.content || "";
+      const ragBase = Deno.env.get("AZAR_RAG_URL") || Deno.env.get("OLLAMA_URL");
       const ragRes = await fetch(
-        `${Deno.env.get("OLLAMA_URL")}/clauria-prompt?q=${encodeURIComponent(lastMsg.substring(0, 200))}`,
+        `${ragBase}/clauria-prompt?q=${encodeURIComponent(lastMsg.substring(0, 200))}`,
         { signal: AbortSignal.timeout(4000) }
       );
       if (ragRes.ok) {
@@ -2861,7 +2862,7 @@ You are now speaking as Leo, not Clauria. Leo brings lightness, healthy humor, a
         finalSystemPrompt = ragData.system || "";
       }
     } catch (e) {
-      console.log("RAG fallback:", e.message);
+      console.log("RAG fallback:", (e as Error).message);
     }
     if (!finalSystemPrompt) {
       finalSystemPrompt = buildSystemPrompt(
