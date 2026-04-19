@@ -3027,7 +3027,7 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
               max_tokens: 400,
               messages: [
                 { role: "system", content: finalSystemPrompt },
-                ...messages.slice(-8),
+                ...messages.slice(-20),
               ],
             }),
           }
