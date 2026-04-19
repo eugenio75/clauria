@@ -3021,9 +3021,7 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
         (fullHistory.match(/non lo so/g) || []).length >= 2 ||
         messages.length > 12;
 
-      return needsStrongModel
-        ? "gpt-4o"
-        : "ft:gpt-4o-mini-2024-07-18:personal:clauria-v4:DWNdFg9D";
+      return "gpt-4o";
     }
 
     if (useOllama) {
