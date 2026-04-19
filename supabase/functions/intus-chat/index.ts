@@ -2849,27 +2849,26 @@ You are now speaking as Leo, not Clauria. Leo brings lightness, healthy humor, a
     // ─── AI Provider Switch ───────────────────────────────────
     const useOllama = Deno.env.get("OLLAMA_ENABLED") === "true";
 
-    // Recupera system prompt + wisdom da Azar RAG server
-    let clauriaSystem = "";
+    let finalSystemPrompt = "";
     try {
+      const lastMsg = messages[messages.length - 1]?.content || "";
       const ragRes = await fetch(
-        `${Deno.env.get("OLLAMA_URL")}/clauria-prompt?q=${encodeURIComponent(
-          messages[messages.length - 1]?.content || ""
-        )}`,
-        { signal: AbortSignal.timeout(3000) }
+        `${Deno.env.get("OLLAMA_URL")}/clauria-prompt?q=${encodeURIComponent(lastMsg.substring(0, 200))}`,
+        { signal: AbortSignal.timeout(4000) }
       );
       if (ragRes.ok) {
         const ragData = await ragRes.json();
-        clauriaSystem = ragData.system || "";
+        finalSystemPrompt = ragData.system || "";
       }
-    } catch {
-      // fallback al system prompt esistente
+    } catch (e) {
+      console.log("RAG fallback:", e.message);
     }
-
-    const systemPrompt = clauriaSystem || buildSystemPrompt(userContext || {}, localHour, isNewSession, language);
-
-    // If this is an onboarding step, add onboarding instructions
-    let finalSystemPrompt = systemPrompt + companionOverlay;
+    if (!finalSystemPrompt) {
+      finalSystemPrompt = buildSystemPrompt(
+        userContext || {}, localHour, isNewSession, language
+      );
+    }
+    finalSystemPrompt += companionOverlay;
 
     // ─── SarAI Return Flow ───────────────────────────────────
     // The user arrived at Clauria via SarAI. When (and only when) Clauria
@@ -3006,7 +3005,7 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
           signal: controller.signal,
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "azarai",
+            model: "clauria",
             stream: false,
             options: { num_predict: 300, num_ctx: 2048 },
             messages: [
