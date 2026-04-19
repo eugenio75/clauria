@@ -3000,6 +3000,32 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
 
     let rawText: string;
 
+    function selectModel(messages: any[]): string {
+      const lastMsg = messages[messages.length - 1]?.content?.toLowerCase() || "";
+      const fullHistory = messages.map(m => m.content).join(" ").toLowerCase();
+
+      // Segnali che richiedono gpt-4o full
+      const needsStrongModel =
+        lastMsg.includes("non voglio") ||
+        lastMsg.includes("sparire") ||
+        lastMsg.includes("non esserci") ||
+        lastMsg.includes("finita") ||
+        lastMsg.includes("sono andato oltre") ||
+        lastMsg.includes("non ce la faccio") ||
+        lastMsg.includes("mi odio") ||
+        lastMsg.includes("inutile") ||
+        lastMsg.includes("depressione") ||
+        lastMsg.includes("acedia") ||
+        lastMsg.includes("tra cui tu") ||
+        lastMsg.includes("sto costruendo") ||
+        (fullHistory.match(/non lo so/g) || []).length >= 2 ||
+        messages.length > 12;
+
+      return needsStrongModel
+        ? "gpt-4o"
+        : "ft:gpt-4o-mini-2024-07-18:personal:clauria-v3:DWMzgLXM";
+    }
+
     if (useOllama) {
       // ─── OpenAI default, Ollama fallback ─────────────────
       const OLLAMA_URL = Deno.env.get("OLLAMA_URL");
@@ -3010,7 +3036,8 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
       try {
         if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY not configured");
 
-        console.log("Using OpenAI backend: ft:gpt-4o-mini clauria");
+        const selectedModel = selectModel(messages);
+        console.log("Using OpenAI backend:", selectedModel);
 
         const openaiResponse = await fetch(
           "https://api.openai.com/v1/chat/completions",
@@ -3022,12 +3049,12 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              model: "ft:gpt-4o-mini-2024-07-18:personal:clauria:DWIdljPa",
+              model: selectedModel,
               temperature: 0.7,
               max_tokens: 400,
               messages: [
                 { role: "system", content: finalSystemPrompt },
-                ...messages.slice(-20),
+                ...messages,
               ],
             }),
           }
