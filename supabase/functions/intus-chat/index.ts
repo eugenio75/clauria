@@ -3005,7 +3005,7 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
           signal: controller.signal,
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "azarai",
+            model: "clauria",
             stream: false,
             options: { num_predict: 300, num_ctx: 2048 },
             messages: [
