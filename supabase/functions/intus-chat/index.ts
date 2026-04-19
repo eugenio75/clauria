@@ -2849,7 +2849,24 @@ You are now speaking as Leo, not Clauria. Leo brings lightness, healthy humor, a
     // ─── AI Provider Switch ───────────────────────────────────
     const useOllama = Deno.env.get("OLLAMA_ENABLED") === "true";
 
-    const systemPrompt = buildSystemPrompt(userContext || {}, localHour, isNewSession, language);
+    // Recupera system prompt + wisdom da Azar RAG server
+    let clauriaSystem = "";
+    try {
+      const ragRes = await fetch(
+        `${Deno.env.get("OLLAMA_URL")}/clauria-prompt?q=${encodeURIComponent(
+          messages[messages.length - 1]?.content || ""
+        )}`,
+        { signal: AbortSignal.timeout(3000) }
+      );
+      if (ragRes.ok) {
+        const ragData = await ragRes.json();
+        clauriaSystem = ragData.system || "";
+      }
+    } catch {
+      // fallback al system prompt esistente
+    }
+
+    const systemPrompt = clauriaSystem || buildSystemPrompt(userContext || {}, localHour, isNewSession, language);
 
     // If this is an onboarding step, add onboarding instructions
     let finalSystemPrompt = systemPrompt + companionOverlay;
