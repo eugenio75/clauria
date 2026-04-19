@@ -2852,8 +2852,9 @@ You are now speaking as Leo, not Clauria. Leo brings lightness, healthy humor, a
     let finalSystemPrompt = "";
     try {
       const lastMsg = messages[messages.length - 1]?.content || "";
+      const ragBase = Deno.env.get("AZAR_RAG_URL") || Deno.env.get("OLLAMA_URL");
       const ragRes = await fetch(
-        `${Deno.env.get("OLLAMA_URL")}/clauria-prompt?q=${encodeURIComponent(lastMsg.substring(0, 200))}`,
+        `${ragBase}/clauria-prompt?q=${encodeURIComponent(lastMsg.substring(0, 200))}`,
         { signal: AbortSignal.timeout(4000) }
       );
       if (ragRes.ok) {
@@ -2861,7 +2862,7 @@ You are now speaking as Leo, not Clauria. Leo brings lightness, healthy humor, a
         finalSystemPrompt = ragData.system || "";
       }
     } catch (e) {
-      console.log("RAG fallback:", e.message);
+      console.log("RAG fallback:", (e as Error).message);
     }
     if (!finalSystemPrompt) {
       finalSystemPrompt = buildSystemPrompt(
@@ -2986,16 +2987,50 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
     let rawText: string;
 
     if (useOllama) {
-      // ─── Ollama Mode (with OpenAI fallback) ──────────────
+      // ─── OpenAI default, Ollama fallback ─────────────────
       const OLLAMA_URL = Deno.env.get("OLLAMA_URL");
       const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
       let usedFallback = false;
 
       try {
-        if (!OLLAMA_URL) throw new Error("OLLAMA_URL not configured");
+        if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY not configured");
 
-        console.log("Using Ollama backend:", OLLAMA_URL, "model: azarai");
+        console.log("Using OpenAI backend: gpt-4o-mini");
+
+        const openaiResponse = await fetch(
+          "https://api.openai.com/v1/chat/completions",
+          {
+            method: "POST",
+            signal: AbortSignal.timeout(15000),
+            headers: {
+              Authorization: `Bearer ${OPENAI_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "gpt-4o-mini",
+              temperature: 0.7,
+              max_tokens: 400,
+              messages: [
+                { role: "system", content: finalSystemPrompt },
+                ...messages.slice(-8),
+              ],
+            }),
+          }
+        );
+
+        if (!openaiResponse.ok) throw new Error(`OpenAI error ${openaiResponse.status}`);
+        const openaiData = await openaiResponse.json();
+        rawText = extractTextFromAIContent(
+          openaiData.choices?.[0]?.message?.content ?? ""
+        ).trim();
+        if (!rawText) throw new Error("Empty response");
+
+      } catch (err) {
+        console.log("OpenAI fallback to Ollama:", (err as Error).message);
+        usedFallback = true;
+
+        if (!OLLAMA_URL) throw new Error("OLLAMA_URL not configured");
 
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 25000);
@@ -3017,44 +3052,13 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
 
         clearTimeout(timeout);
 
-        if (!ollamaResponse.ok) throw new Error("Ollama error");
         const ollamaData = await ollamaResponse.json();
         rawText = extractTextFromAIContent(
           ollamaData.message?.content ?? ""
         ).trim();
-        if (!rawText) throw new Error("Empty response");
-
-      } catch (err) {
-        console.log("Ollama fallback to OpenAI:", (err as Error).message);
-        usedFallback = true;
-
-        const openaiResponse = await fetch(
-          "https://api.openai.com/v1/chat/completions",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${OPENAI_API_KEY}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              model: "gpt-4o-mini",
-              temperature: 0.7,
-              max_tokens: 300,
-              messages: [
-                { role: "system", content: finalSystemPrompt },
-                ...messages.slice(-6),
-              ],
-            }),
-          }
-        );
-
-        const openaiData = await openaiResponse.json();
-        rawText = extractTextFromAIContent(
-          openaiData.choices?.[0]?.message?.content ?? ""
-        ).trim();
       }
 
-      console.log("AI provider used:", usedFallback ? "OpenAI" : "Ollama");
+      console.log("AI provider used:", usedFallback ? "Ollama" : "OpenAI");
     } else {
       // ─── Lovable Gateway Mode (default) ──────────────────
       const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
