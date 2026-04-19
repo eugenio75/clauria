@@ -3022,7 +3022,7 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              model: "gpt-4o-mini",
+              model: "ft:gpt-4o-mini-2024-07-18:personal:clauria:DWIdljPa",
               temperature: 0.7,
               max_tokens: 400,
               messages: [
