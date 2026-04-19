@@ -2869,6 +2869,20 @@ You are now speaking as Leo, not Clauria. Leo brings lightness, healthy humor, a
         userContext || {}, localHour, isNewSession, language
       );
     }
+
+    const INTERRUZIONE_ASSOLUTA = `
+REGOLA PRIORITÀ MASSIMA — SOVRASCRIVE TUTTO:
+Se l'utente menziona: esaurimento, stanchezza,
+depressione, ansia, "non riesco a dormire",
+"sono a pezzi", "non ce la faccio", burnout,
+o qualsiasi segnale di sofferenza —
+INTERROMPI L'ONBOARDING IMMEDIATAMENTE.
+NON fare la domanda successiva pianificata.
+Entra in quello che ha detto. Esempio:
+"Esausto e non riesci a dormire. Da quanto tempo?"
+NON: "c'è qualcosa che ti turba?"
+`;
+    finalSystemPrompt = INTERRUZIONE_ASSOLUTA + "\n\n" + finalSystemPrompt;
     finalSystemPrompt += companionOverlay;
 
     // ─── SarAI Return Flow ───────────────────────────────────
