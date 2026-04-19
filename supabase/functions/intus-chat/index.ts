@@ -3027,7 +3027,7 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
               max_tokens: 400,
               messages: [
                 { role: "system", content: finalSystemPrompt },
-                ...messages.slice(-8),
+                ...messages.slice(-20),
               ],
             }),
           }
@@ -3059,7 +3059,7 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
             options: { num_predict: 300, num_ctx: 2048 },
             messages: [
               { role: "system", content: finalSystemPrompt },
-              ...messages.slice(-6),
+              ...messages.slice(-20),
             ],
           }),
         });
