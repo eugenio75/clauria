@@ -3023,7 +3023,7 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
 
       return needsStrongModel
         ? "gpt-4o"
-        : "ft:gpt-4o-mini-2024-07-18:personal:clauria-v3:DWMzgLXM";
+        : "ft:gpt-4o-mini-2024-07-18:personal:clauria-v4:DWNdFg9D";
     }
 
     if (useOllama) {
