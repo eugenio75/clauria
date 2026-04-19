@@ -3010,7 +3010,7 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
       try {
         if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY not configured");
 
-        console.log("Using OpenAI backend: gpt-4o-mini");
+        console.log("Using OpenAI backend: ft:gpt-4o-mini clauria");
 
         const openaiResponse = await fetch(
           "https://api.openai.com/v1/chat/completions",
@@ -3022,7 +3022,7 @@ IMPORTANT: Never use a generic closing. Always reference something specific from
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              model: "gpt-4o-mini",
+              model: "ft:gpt-4o-mini-2024-07-18:personal:clauria:DWIdljPa",
               temperature: 0.7,
               max_tokens: 400,
               messages: [
