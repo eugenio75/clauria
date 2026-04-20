@@ -48,6 +48,12 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         answer: data.answer,
+        message: data.answer,
+        content: data.answer,
+        reply: data.answer,
+        text: data.answer,
+        response: data.answer,
+        messages: [{ role: "assistant", content: data.answer }],
         meta: data.meta,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
