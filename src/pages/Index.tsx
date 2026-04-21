@@ -120,6 +120,44 @@ const Index = () => {
     }, 300);
   }, []);
 
+  // Dynamic init: ask the backend for the first message (new user → "Come ti chiami?",
+  // returning user → "Bentornato {name}. Come stai?"). The "__init__" sentinel is internal
+  // and never shown in the chat as a user message.
+  const initChatFromBackend = useCallback(async () => {
+    if (!user) return;
+    setIsTyping(true);
+    try {
+      const ctx = await loadContext(user.id);
+      const { data, error } = await supabase.functions.invoke("intus-chat", {
+        body: {
+          user_message: "__init__",
+          messages: [],
+          userContext: ctx,
+          userId: user.id,
+          localHour: new Date().getHours(),
+          isNewSession,
+          language: lang,
+          companionId: activeCompanion,
+        },
+      });
+      if (error) throw error;
+      if (isNewSession) setIsNewSession(false);
+      const cleanedText = cleanAIText(
+        data?.text ?? data?.answer ?? data?.message ?? data?.content ?? ""
+      );
+      if (cleanedText) {
+        setMessages((prev) => [
+          ...prev,
+          { id: Date.now().toString(), content: cleanedText, sender: "ai" },
+        ]);
+      }
+    } catch (err) {
+      console.error("init chat error:", err);
+    } finally {
+      setIsTyping(false);
+    }
+  }, [user, loadContext, isNewSession, lang, activeCompanion]);
+
   const startOnboarding = useCallback(() => {
     if (onboardingStartedRef.current) return;
     onboardingStartedRef.current = true;
@@ -127,7 +165,7 @@ const Index = () => {
     if (profile.name && profile.ageRange && profile.lifeContext) {
       setProfile(prev => ({ ...prev, onboardingComplete: true }));
       setAppPhase("conversation");
-      sendToAI([], undefined);
+      initChatFromBackend();
       return;
     }
     setAppPhase("onboarding");
@@ -146,6 +184,11 @@ const Index = () => {
       return;
     }
     setOnboardingStep(firstEmpty);
+    // First onboarding step: let the backend produce the opening line dynamically.
+    if (firstEmpty === 0) {
+      initChatFromBackend();
+      return;
+    }
     const step = ONBOARDING_STEPS[firstEmpty];
     let msg: string;
     if (step.dynamic) {
@@ -156,7 +199,7 @@ const Index = () => {
       msg = step.aiMessageFn ? step.aiMessageFn(profile.name) : step.aiMessage!;
     }
     setTimeout(() => addAIMessage(msg), 500);
-  }, [addAIMessage, profile, ONBOARDING_STEPS]);
+  }, [addAIMessage, profile, ONBOARDING_STEPS, initChatFromBackend]);
 
   const handleWelcomeComplete = useCallback(() => {
     localStorage.setItem("intus_welcome_seen", "true");
