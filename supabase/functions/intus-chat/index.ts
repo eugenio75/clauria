@@ -16,7 +16,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { messages, conversationId } = body;
+    const { messages } = body;
 
     // Resolve auth identity
     const supabase = createClient(
@@ -43,11 +43,14 @@ serve(async (req) => {
         ? lastUserMsg.content
         : body.user_message || "";
 
+    // One user = one permanent conversation (userId as conversation_id)
+    const conversation_id = userId || guestToken || "anonymous";
+
     const response = await fetch(`${RAG_URL}/orchestrate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        conversation_id: conversationId || userId || guestToken || "anonymous",
+        conversation_id,
         user_id: userId || guestToken || "anonymous",
         user_message: userMessage,
         guest_token: guestToken,
