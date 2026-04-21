@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,7 +16,23 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { messages, userId, conversationId } = body;
+    const { messages, conversationId } = body;
+
+    // Resolve auth identity
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!
+    );
+    const token = req.headers.get("Authorization")?.replace("Bearer ", "") ?? "";
+    let user: any = null;
+    if (token) {
+      const { data } = await supabase.auth.getUser(token);
+      user = data?.user ?? null;
+    }
+
+    const isGuest = !user || (user as any).is_anonymous;
+    const userId = user?.id ?? null;
+    const guestToken = isGuest ? (body.guest_token ?? userId) : null;
 
     // Extract last user message
     const lastUserMsg = Array.isArray(messages)
@@ -26,15 +43,14 @@ serve(async (req) => {
         ? lastUserMsg.content
         : body.user_message || "";
 
-    const convId = conversationId || userId || "anonymous";
-
     const response = await fetch(`${RAG_URL}/orchestrate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        conversation_id: convId,
-        user_id: userId,
+        conversation_id: conversationId || userId || guestToken || "anonymous",
+        user_id: userId || guestToken || "anonymous",
         user_message: userMessage,
+        guest_token: guestToken,
       }),
       signal: AbortSignal.timeout(30000),
     });
