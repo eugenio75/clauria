@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/runtime-client";
 import { useLanguage } from "../i18n/LanguageContext";
 
-type AuthStep = "choose" | "email" | "otp";
+type AuthMode = "choose" | "signin" | "signup";
 
 interface LoginScreenProps {
   hasGuestSession?: boolean;
@@ -11,17 +11,22 @@ interface LoginScreenProps {
 }
 
 const LoginScreen = ({ hasGuestSession = false, onContinueAsGuest }: LoginScreenProps) => {
-  const [step, setStep] = useState<AuthStep>("choose");
+  const [mode, setMode] = useState<AuthMode>("choose");
   const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
+  const [inlineInfo, setInlineInfo] = useState<string | null>(null);
   const { t } = useLanguage();
 
-  const clearError = () => setInlineError(null);
+  const clearMessages = () => {
+    setInlineError(null);
+    setInlineInfo(null);
+  };
 
   const handleGuest = async () => {
-    clearError();
+    clearMessages();
     if (hasGuestSession) {
       onContinueAsGuest?.();
       return;
@@ -42,7 +47,7 @@ const LoginScreen = ({ hasGuestSession = false, onContinueAsGuest }: LoginScreen
 
   const handleGoogle = async () => {
     setLoading(true);
-    clearError();
+    clearMessages();
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -57,57 +62,52 @@ const LoginScreen = ({ hasGuestSession = false, onContinueAsGuest }: LoginScreen
     }
   };
 
-  const handleEmailSubmit = async () => {
-    if (!email.trim()) return;
+  const handleSignIn = async () => {
+    if (!email.trim() || !password) return;
     setLoading(true);
-    clearError();
+    clearMessages();
     try {
-      const { data, error } = await supabase.functions.invoke("send-login-otp", {
-        body: { email: email.trim() },
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
       });
       if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      setStep("otp");
+      // onAuthStateChange will route the user
     } catch (err) {
       console.error(err);
-      setInlineError(t("login_error_email"));
+      setInlineError(t("login_invalid_credentials"));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOtpVerify = async () => {
-    if (otp.length < 6) return;
+  const handleSignUp = async () => {
+    if (!email.trim() || !password) return;
+    if (password.length < 6) {
+      setInlineError(t("login_password_too_short"));
+      return;
+    }
+    if (password !== passwordConfirm) {
+      setInlineError(t("login_password_mismatch"));
+      return;
+    }
     setLoading(true);
-    clearError();
+    clearMessages();
     try {
-      const { data, error } = await supabase.functions.invoke("verify-login-otp", {
-        body: { email: email.trim(), code: otp.trim() },
+      const { error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/app`,
+        },
       });
       if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-
-      if (data?.tokenHash) {
-        const { error: verifyError } = await supabase.auth.verifyOtp({
-          token_hash: data.tokenHash,
-          type: "magiclink",
-        });
-        if (verifyError) throw verifyError;
-
-        if (data?.isNewUser) {
-          supabase.functions.invoke("send-welcome-email", {
-            body: { email: email.trim() },
-          }).catch(() => {});
-        }
-      }
+      setInlineInfo(t("login_check_email"));
+      setPassword("");
+      setPasswordConfirm("");
     } catch (err) {
       console.error(err);
-      const msg = err instanceof Error && err.message.includes("non valido")
-        ? t("login_error_otp_invalid")
-        : err instanceof Error && err.message.includes("scaduto")
-        ? t("login_error_otp_invalid")
-        : t("login_error_generic");
-      setInlineError(msg);
+      setInlineError(t("login_error_generic"));
     } finally {
       setLoading(false);
     }
@@ -148,10 +148,11 @@ const LoginScreen = ({ hasGuestSession = false, onContinueAsGuest }: LoginScreen
             {t("login_access")}
           </p>
 
-          {/* Inline error */}
+          {/* Inline messages */}
           <AnimatePresence>
             {inlineError && (
               <motion.p
+                key="err"
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
@@ -160,12 +161,23 @@ const LoginScreen = ({ hasGuestSession = false, onContinueAsGuest }: LoginScreen
                 {inlineError}
               </motion.p>
             )}
+            {inlineInfo && (
+              <motion.p
+                key="info"
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                className="text-sm text-center text-trust-blue/80 leading-relaxed"
+              >
+                {inlineInfo}
+              </motion.p>
+            )}
           </AnimatePresence>
 
-          {step === "choose" && (
+          {mode === "choose" && (
             <div className="space-y-2.5">
               <button
-                onClick={() => { setStep("email"); clearError(); }}
+                onClick={() => { setMode("signin"); clearMessages(); }}
                 disabled={loading}
                 className="w-full flex items-center justify-center gap-2.5 bg-warm-amber text-primary-foreground rounded-xl py-3.5 text-[15px] font-medium transition-all disabled:opacity-50 shadow-sm hover:shadow-md"
               >
@@ -215,65 +227,66 @@ const LoginScreen = ({ hasGuestSession = false, onContinueAsGuest }: LoginScreen
             </div>
           )}
 
-          {step === "email" && (
+          {(mode === "signin" || mode === "signup") && (
             <div className="space-y-3">
               <input
                 type="email"
                 value={email}
-                onChange={(e) => { setEmail(e.target.value); clearError(); }}
+                onChange={(e) => { setEmail(e.target.value); clearMessages(); }}
                 placeholder={t("login_email_placeholder")}
                 autoFocus
                 className="w-full bg-transparent border-b-2 border-warm-amber/30 text-foreground text-[15px] py-2 focus:outline-none focus:border-warm-amber transition-colors placeholder:text-muted-foreground/50"
-                onKeyDown={(e) => e.key === "Enter" && handleEmailSubmit()}
               />
-              <button
-                onClick={handleEmailSubmit}
-                disabled={loading || !email.trim()}
-                className="w-full bg-warm-amber text-primary-foreground rounded-xl py-3.5 text-[15px] font-medium transition-opacity disabled:opacity-50 shadow-sm"
-              >
-                {loading ? t("login_sending") : t("login_send_code")}
-              </button>
-              <p className="text-xs text-muted-foreground/60 leading-relaxed text-center mt-1">
-                {t("login_email_hint")}
-              </p>
-              <button
-                onClick={() => { setStep("choose"); clearError(); }}
-                className="text-xs text-muted-foreground/60 italic"
-              >
-                {t("login_back")}
-              </button>
-            </div>
-          )}
-
-          {step === "otp" && (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                {t("login_otp_instructions")} {email}
-              </p>
               <input
-                type="text"
-                inputMode="numeric"
-                maxLength={6}
-                value={otp}
-                onChange={(e) => { setOtp(e.target.value.replace(/\D/g, "")); clearError(); }}
-                placeholder="000000"
-                autoFocus
-                className="w-full text-center tracking-[0.5em] bg-transparent border-b-2 border-warm-amber/30 text-foreground text-xl font-mono py-2 focus:outline-none focus:border-warm-amber transition-colors placeholder:text-muted-foreground/30"
-                onKeyDown={(e) => e.key === "Enter" && handleOtpVerify()}
+                type="password"
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); clearMessages(); }}
+                placeholder={t("login_password_placeholder")}
+                className="w-full bg-transparent border-b-2 border-warm-amber/30 text-foreground text-[15px] py-2 focus:outline-none focus:border-warm-amber transition-colors placeholder:text-muted-foreground/50"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && mode === "signin") handleSignIn();
+                }}
               />
+              {mode === "signup" && (
+                <input
+                  type="password"
+                  value={passwordConfirm}
+                  onChange={(e) => { setPasswordConfirm(e.target.value); clearMessages(); }}
+                  placeholder={t("login_password_confirm_placeholder")}
+                  className="w-full bg-transparent border-b-2 border-warm-amber/30 text-foreground text-[15px] py-2 focus:outline-none focus:border-warm-amber transition-colors placeholder:text-muted-foreground/50"
+                  onKeyDown={(e) => e.key === "Enter" && handleSignUp()}
+                />
+              )}
               <button
-                onClick={handleOtpVerify}
-                disabled={loading || otp.length < 6}
+                onClick={mode === "signin" ? handleSignIn : handleSignUp}
+                disabled={loading || !email.trim() || !password}
                 className="w-full bg-warm-amber text-primary-foreground rounded-xl py-3.5 text-[15px] font-medium transition-opacity disabled:opacity-50 shadow-sm"
               >
-                {loading ? t("login_verifying") : t("login_confirm")}
+                {loading
+                  ? t("login_sending")
+                  : mode === "signin"
+                  ? t("login_signin_cta")
+                  : t("login_signup_cta")}
               </button>
-              <button
-                onClick={() => { setStep("email"); setOtp(""); clearError(); }}
-                className="text-xs text-muted-foreground/60 italic"
-              >
-                {t("login_change_email")}
-              </button>
+              <div className="flex items-center justify-between pt-1">
+                <button
+                  onClick={() => { setMode("choose"); clearMessages(); setPassword(""); setPasswordConfirm(""); }}
+                  className="text-xs text-muted-foreground/60 italic"
+                >
+                  {t("login_back")}
+                </button>
+                <button
+                  onClick={() => {
+                    setMode(mode === "signin" ? "signup" : "signin");
+                    clearMessages();
+                    setPassword("");
+                    setPasswordConfirm("");
+                  }}
+                  className="text-xs text-warm-amber italic"
+                >
+                  {mode === "signin" ? t("login_to_signup") : t("login_to_signin")}
+                </button>
+              </div>
             </div>
           )}
         </div>
