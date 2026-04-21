@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/runtime-client";
 import { useLanguage } from "../i18n/LanguageContext";
 
-type AuthMode = "choose" | "email" | "otp";
+type AuthMode = "choose" | "signin" | "signup" | "forgot";
 
 interface LoginScreenProps {
   hasGuestSession?: boolean;
@@ -13,7 +13,8 @@ interface LoginScreenProps {
 const LoginScreen = ({ hasGuestSession = false, onContinueAsGuest }: LoginScreenProps) => {
   const [mode, setMode] = useState<AuthMode>("choose");
   const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
   const [inlineInfo, setInlineInfo] = useState<string | null>(null);
@@ -24,13 +25,18 @@ const LoginScreen = ({ hasGuestSession = false, onContinueAsGuest }: LoginScreen
     setInlineInfo(null);
   };
 
+  const resetForm = () => {
+    setPassword("");
+    setConfirmPassword("");
+    clearMessages();
+  };
+
   const handleGuest = async () => {
     clearMessages();
     if (hasGuestSession) {
       onContinueAsGuest?.();
       return;
     }
-
     setLoading(true);
     try {
       const { error } = await supabase.auth.signInAnonymously();
@@ -50,7 +56,7 @@ const LoginScreen = ({ hasGuestSession = false, onContinueAsGuest }: LoginScreen
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: window.location.origin },
+        options: { redirectTo: `${window.location.origin}/app` },
       });
       if (error) throw error;
     } catch (err) {
@@ -61,60 +67,94 @@ const LoginScreen = ({ hasGuestSession = false, onContinueAsGuest }: LoginScreen
     }
   };
 
-  const handleSendOtp = async () => {
+  const handleSignIn = async () => {
+    if (!email.trim() || !password) return;
+    setLoading(true);
+    clearMessages();
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (error) {
+        if (error.message.toLowerCase().includes("email not confirmed")) {
+          setInlineError("Devi prima confermare la tua email. Controlla la posta.");
+        } else {
+          setInlineError("Email o password non corretti.");
+        }
+        return;
+      }
+      // onAuthStateChange porterà l'utente in app
+    } catch (err) {
+      console.error(err);
+      setInlineError(t("login_error_generic"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignUp = async () => {
+    if (!email.trim() || !password) return;
+    if (password.length < 6) {
+      setInlineError("La password deve avere almeno 6 caratteri.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setInlineError("Le password non coincidono.");
+      return;
+    }
+    setLoading(true);
+    clearMessages();
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/app`,
+        },
+      });
+      if (error) {
+        if (error.message.toLowerCase().includes("already registered") || error.message.toLowerCase().includes("user already")) {
+          setInlineError("Questa email è già registrata. Accedi con la tua password.");
+        } else {
+          setInlineError(error.message);
+        }
+        return;
+      }
+      if (data.user && !data.session) {
+        setInlineInfo("Ti abbiamo inviato un'email per confermare il tuo account. Controlla la posta (anche lo spam).");
+        setPassword("");
+        setConfirmPassword("");
+      }
+    } catch (err) {
+      console.error(err);
+      setInlineError(t("login_error_generic"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgot = async () => {
     if (!email.trim()) return;
     setLoading(true);
     clearMessages();
     try {
-      const { error } = await supabase.functions.invoke("send-login-otp", {
-        body: { email: email.trim() },
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) throw error;
-      setMode("otp");
-      setInlineInfo("Ti abbiamo inviato un codice a 6 cifre. Controlla la mail.");
+      setInlineInfo("Ti abbiamo inviato un link per reimpostare la password. Controlla la posta.");
     } catch (err) {
       console.error(err);
-      setInlineError("Impossibile inviare il codice. Riprova tra poco.");
+      setInlineError("Impossibile inviare l'email. Riprova tra poco.");
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleVerifyOtp = async () => {
-    if (otp.length < 6) return;
-    setLoading(true);
-    clearMessages();
-    try {
-      const { data, error } = await supabase.functions.invoke("verify-login-otp", {
-        body: { email: email.trim(), code: otp.trim() },
-      });
-      if (error) throw error;
-      if (!data?.tokenHash) throw new Error("Token mancante");
-
-      // Verifica il token hash per creare la sessione
-      const { error: verifyError } = await supabase.auth.verifyOtp({
-        token_hash: data.tokenHash,
-        type: "magiclink",
-      });
-      if (verifyError) throw verifyError;
-
-      // onAuthStateChange porterà l'utente in app
-    } catch (err) {
-      console.error(err);
-      setInlineError("Codice non valido o scaduto.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResend = async () => {
-    setOtp("");
-    await handleSendOtp();
   };
 
   return (
     <div
-      className="fixed inset-0 flex flex-col items-center justify-center px-6"
+      className="fixed inset-0 flex flex-col items-center justify-center px-6 overflow-y-auto py-8"
       style={{
         background: "radial-gradient(ellipse at 30% 50%, hsl(38,60%,92%), hsl(215,40%,88%), hsl(38,35%,96%))",
       }}
@@ -123,9 +163,8 @@ const LoginScreen = ({ hasGuestSession = false, onContinueAsGuest }: LoginScreen
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="w-full max-w-[360px] space-y-8"
+        className="w-full max-w-[360px] space-y-8 my-auto"
       >
-        {/* Logo */}
         <div className="text-center space-y-3">
           <motion.span
             animate={{ scale: [1, 1.06, 1], opacity: [0.85, 1, 0.85] }}
@@ -136,38 +175,27 @@ const LoginScreen = ({ hasGuestSession = false, onContinueAsGuest }: LoginScreen
           </motion.span>
           <h1 className="font-display text-3xl tracking-wide text-foreground">CLAURIA</h1>
           <p className="font-display italic text-muted-foreground text-sm">{t("login_subtitle")}</p>
-          <p className="text-xs text-muted-foreground/50 mt-1">
-            {t("login_safe_space")}
-          </p>
+          <p className="text-xs text-muted-foreground/50 mt-1">{t("login_safe_space")}</p>
         </div>
 
-        {/* Auth card */}
         <div className="glass rounded-2xl px-5 py-6 space-y-4 shadow-lg">
           <p className="text-foreground text-[15px] leading-relaxed text-center" style={{ lineHeight: "1.8" }}>
-            {t("login_access")}
+            {mode === "signup" ? "Crea il tuo account" :
+             mode === "forgot" ? "Reimposta la password" :
+             mode === "signin" ? "Bentornato" :
+             t("login_access")}
           </p>
 
-          {/* Inline messages */}
           <AnimatePresence>
             {inlineError && (
-              <motion.p
-                key="err"
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                className="text-sm text-center text-crisis-red/80 leading-relaxed"
-              >
+              <motion.p key="err" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                className="text-sm text-center text-crisis-red/80 leading-relaxed">
                 {inlineError}
               </motion.p>
             )}
             {inlineInfo && (
-              <motion.p
-                key="info"
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                className="text-sm text-center text-trust-blue/80 leading-relaxed"
-              >
+              <motion.p key="info" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                className="text-sm text-center text-trust-blue/80 leading-relaxed">
                 {inlineInfo}
               </motion.p>
             )}
@@ -176,21 +204,25 @@ const LoginScreen = ({ hasGuestSession = false, onContinueAsGuest }: LoginScreen
           {mode === "choose" && (
             <div className="space-y-2.5">
               <button
-                onClick={() => { setMode("email"); clearMessages(); }}
+                onClick={() => { setMode("signin"); resetForm(); }}
                 disabled={loading}
                 className="w-full flex items-center justify-center gap-2.5 bg-warm-amber text-primary-foreground rounded-xl py-3.5 text-[15px] font-medium transition-all disabled:opacity-50 shadow-sm hover:shadow-md"
               >
                 <span className="text-lg">✉️</span>
-                {t("login_email")}
+                Accedi con email
+              </button>
+
+              <button
+                onClick={() => { setMode("signup"); resetForm(); }}
+                disabled={loading}
+                className="w-full text-center text-sm text-warm-amber font-medium py-2"
+              >
+                Non hai un account? Registrati
               </button>
 
               <div className="relative my-2">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border/40" />
-                </div>
-                <div className="relative flex justify-center">
-                  <span className="bg-white/50 px-3 text-xs text-muted-foreground/50">{t("login_or")}</span>
-                </div>
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border/40" /></div>
+                <div className="relative flex justify-center"><span className="bg-white/50 px-3 text-xs text-muted-foreground/50">{t("login_or")}</span></div>
               </div>
 
               <button
@@ -208,96 +240,121 @@ const LoginScreen = ({ hasGuestSession = false, onContinueAsGuest }: LoginScreen
               </button>
 
               <div className="relative my-2">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border/40" />
-                </div>
-                <div className="relative flex justify-center">
-                  <span className="bg-white/50 px-3 text-xs text-muted-foreground/50">{t("login_or")}</span>
-                </div>
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border/40" /></div>
+                <div className="relative flex justify-center"><span className="bg-white/50 px-3 text-xs text-muted-foreground/50">{t("login_or")}</span></div>
               </div>
 
-              <button
-                onClick={handleGuest}
-                disabled={loading}
-                className="w-full text-center text-sm text-muted-foreground/60 italic py-2 transition-opacity disabled:opacity-50"
-              >
+              <button onClick={handleGuest} disabled={loading}
+                className="w-full text-center text-sm text-muted-foreground/60 italic py-2 transition-opacity disabled:opacity-50">
                 {t("login_guest")}
               </button>
             </div>
           )}
 
-          {mode === "email" && (
+          {mode === "signin" && (
             <div className="space-y-3">
               <input
-                type="email"
-                value={email}
+                type="email" value={email} autoFocus
                 onChange={(e) => { setEmail(e.target.value); clearMessages(); }}
                 placeholder={t("login_email_placeholder")}
-                autoFocus
                 className="w-full bg-transparent border-b-2 border-warm-amber/30 text-foreground text-[15px] py-2 focus:outline-none focus:border-warm-amber transition-colors placeholder:text-muted-foreground/50"
-                onKeyDown={(e) => e.key === "Enter" && handleSendOtp()}
+              />
+              <input
+                type="password" value={password}
+                onChange={(e) => { setPassword(e.target.value); clearMessages(); }}
+                placeholder="password"
+                onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
+                className="w-full bg-transparent border-b-2 border-warm-amber/30 text-foreground text-[15px] py-2 focus:outline-none focus:border-warm-amber transition-colors placeholder:text-muted-foreground/50"
               />
               <button
-                onClick={handleSendOtp}
-                disabled={loading || !email.trim()}
+                onClick={handleSignIn} disabled={loading || !email.trim() || !password}
                 className="w-full bg-warm-amber text-primary-foreground rounded-xl py-3.5 text-[15px] font-medium transition-opacity disabled:opacity-50 shadow-sm"
               >
-                {loading ? t("login_sending") : "Invia codice"}
+                {loading ? "Accesso..." : "Accedi"}
               </button>
               <div className="flex items-center justify-between pt-1">
-                <button
-                  onClick={() => { setMode("choose"); clearMessages(); }}
-                  className="text-xs text-muted-foreground/60 italic"
-                >
+                <button onClick={() => { setMode("choose"); resetForm(); }}
+                  className="text-xs text-muted-foreground/60 italic">
                   {t("login_back")}
+                </button>
+                <button onClick={() => { setMode("forgot"); resetForm(); }}
+                  className="text-xs text-warm-amber italic">
+                  Password dimenticata?
+                </button>
+              </div>
+              <button onClick={() => { setMode("signup"); resetForm(); }}
+                className="w-full text-center text-xs text-muted-foreground/70 pt-2">
+                Non hai un account? <span className="text-warm-amber font-medium">Registrati</span>
+              </button>
+            </div>
+          )}
+
+          {mode === "signup" && (
+            <div className="space-y-3">
+              <input
+                type="email" value={email} autoFocus
+                onChange={(e) => { setEmail(e.target.value); clearMessages(); }}
+                placeholder={t("login_email_placeholder")}
+                className="w-full bg-transparent border-b-2 border-warm-amber/30 text-foreground text-[15px] py-2 focus:outline-none focus:border-warm-amber transition-colors placeholder:text-muted-foreground/50"
+              />
+              <input
+                type="password" value={password}
+                onChange={(e) => { setPassword(e.target.value); clearMessages(); }}
+                placeholder="password (min. 6 caratteri)"
+                className="w-full bg-transparent border-b-2 border-warm-amber/30 text-foreground text-[15px] py-2 focus:outline-none focus:border-warm-amber transition-colors placeholder:text-muted-foreground/50"
+              />
+              <input
+                type="password" value={confirmPassword}
+                onChange={(e) => { setConfirmPassword(e.target.value); clearMessages(); }}
+                placeholder="conferma password"
+                onKeyDown={(e) => e.key === "Enter" && handleSignUp()}
+                className="w-full bg-transparent border-b-2 border-warm-amber/30 text-foreground text-[15px] py-2 focus:outline-none focus:border-warm-amber transition-colors placeholder:text-muted-foreground/50"
+              />
+              <button
+                onClick={handleSignUp} disabled={loading || !email.trim() || !password || !confirmPassword}
+                className="w-full bg-warm-amber text-primary-foreground rounded-xl py-3.5 text-[15px] font-medium transition-opacity disabled:opacity-50 shadow-sm"
+              >
+                {loading ? "Registrazione..." : "Registrati"}
+              </button>
+              <div className="flex items-center justify-between pt-1">
+                <button onClick={() => { setMode("choose"); resetForm(); }}
+                  className="text-xs text-muted-foreground/60 italic">
+                  {t("login_back")}
+                </button>
+                <button onClick={() => { setMode("signin"); resetForm(); }}
+                  className="text-xs text-warm-amber italic">
+                  Hai già un account? Accedi
                 </button>
               </div>
             </div>
           )}
 
-          {mode === "otp" && (
+          {mode === "forgot" && (
             <div className="space-y-3">
               <p className="text-xs text-center text-muted-foreground/70 italic">
-                Codice inviato a {email}
+                Inserisci la tua email: ti invieremo un link per reimpostare la password.
               </p>
               <input
-                type="text"
-                inputMode="numeric"
-                maxLength={6}
-                value={otp}
-                onChange={(e) => { setOtp(e.target.value.replace(/\D/g, "")); clearMessages(); }}
-                placeholder="000000"
-                autoFocus
-                className="w-full text-center tracking-[0.5em] bg-transparent border-b-2 border-warm-amber/30 text-foreground text-2xl font-mono py-3 focus:outline-none focus:border-warm-amber transition-colors placeholder:text-muted-foreground/30"
-                onKeyDown={(e) => e.key === "Enter" && handleVerifyOtp()}
+                type="email" value={email} autoFocus
+                onChange={(e) => { setEmail(e.target.value); clearMessages(); }}
+                placeholder={t("login_email_placeholder")}
+                onKeyDown={(e) => e.key === "Enter" && handleForgot()}
+                className="w-full bg-transparent border-b-2 border-warm-amber/30 text-foreground text-[15px] py-2 focus:outline-none focus:border-warm-amber transition-colors placeholder:text-muted-foreground/50"
               />
               <button
-                onClick={handleVerifyOtp}
-                disabled={loading || otp.length < 6}
+                onClick={handleForgot} disabled={loading || !email.trim()}
                 className="w-full bg-warm-amber text-primary-foreground rounded-xl py-3.5 text-[15px] font-medium transition-opacity disabled:opacity-50 shadow-sm"
               >
-                {loading ? "Verifico..." : "Conferma"}
+                {loading ? "Invio..." : "Invia link di reset"}
               </button>
-              <div className="flex items-center justify-between pt-1">
-                <button
-                  onClick={() => { setMode("email"); setOtp(""); clearMessages(); }}
-                  className="text-xs text-muted-foreground/60 italic"
-                >
-                  ← Cambia email
-                </button>
-                <button
-                  onClick={handleResend}
-                  disabled={loading}
-                  className="text-xs text-warm-amber italic disabled:opacity-50"
-                >
-                  Invia di nuovo
-                </button>
-              </div>
+              <button onClick={() => { setMode("signin"); resetForm(); }}
+                className="w-full text-center text-xs text-muted-foreground/60 italic pt-1">
+                ← Torna ad accedi
+              </button>
             </div>
           )}
         </div>
 
-        {/* Trust line */}
         <p className="text-center text-xs text-muted-foreground/40 italic">
           {t("login_privacy_line")}
         </p>
