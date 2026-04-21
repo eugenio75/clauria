@@ -302,8 +302,8 @@ const Index = () => {
           if (greetingSentRef.current) return;
           greetingSentRef.current = true;
 
-          // Let AI generate the opening message with full context
-          sendToAI([], undefined);
+          // Let the backend produce the opening message dynamically via __init__.
+          initChatFromBackend();
         } else {
           const partialProfile = {
             name: ctx.user_name || "",
