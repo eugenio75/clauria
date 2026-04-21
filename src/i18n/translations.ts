@@ -37,6 +37,16 @@ const translations = {
     login_email_hint: "Non hai un account? Inserisci la tua email e riceverai un codice di accesso. Se è la prima volta, il tuo account verrà creato automaticamente.",
     login_safe_space: "Uno spazio solo tuo.",
     login_privacy_line: "Nessuna pubblicità. Nessun dato venduto. Solo tu.",
+    login_password_placeholder: "password",
+    login_password_confirm_placeholder: "conferma password",
+    login_signin_cta: "Accedi",
+    login_signup_cta: "Registrati",
+    login_to_signup: "Non hai un account? Registrati",
+    login_to_signin: "Hai già un account? Accedi",
+    login_password_too_short: "La password deve avere almeno 6 caratteri.",
+    login_password_mismatch: "Le password non coincidono.",
+    login_check_email: "Ti abbiamo inviato un'email per confermare il tuo account.",
+    login_invalid_credentials: "Email o password non corretti.",
 
     // Chat
     chat_placeholder: "Scrivi qui...",
@@ -157,6 +167,16 @@ const translations = {
     login_email_hint: "Don't have an account? Enter your email and you'll receive an access code. If it's your first time, your account will be created automatically.",
     login_safe_space: "A space just for you.",
     login_privacy_line: "No ads. No data sold. Just you.",
+    login_password_placeholder: "password",
+    login_password_confirm_placeholder: "confirm password",
+    login_signin_cta: "Sign in",
+    login_signup_cta: "Sign up",
+    login_to_signup: "No account yet? Sign up",
+    login_to_signin: "Already have an account? Sign in",
+    login_password_too_short: "Password must be at least 6 characters.",
+    login_password_mismatch: "Passwords do not match.",
+    login_check_email: "We sent you an email to confirm your account.",
+    login_invalid_credentials: "Incorrect email or password.",
 
     // Chat
     chat_placeholder: "Write here...",
