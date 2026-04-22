@@ -49,7 +49,20 @@ export function useIntusContext() {
       supabase.from("intus_profiles").select("*").eq("id", userId).maybeSingle(),
       supabase.from("intus_context").select("*").eq("user_id", userId).maybeSingle(),
     ]);
-    return { ...(profile ?? {}), ...(context ?? {}) } as unknown as IntusUserContext;
+    // If DB has no records for this user, return an empty object — never fall back
+    // to stale React state. This prevents the backend from receiving invented
+    // mood/session_history/emotional_theme data after a memory reset or DB purge.
+    if (!profile && !context) {
+      return {} as IntusUserContext;
+    }
+    // Strip any null/undefined fields so the backend sees only real data.
+    const merged: Record<string, unknown> = { ...(profile ?? {}), ...(context ?? {}) };
+    for (const key of Object.keys(merged)) {
+      const v = merged[key];
+      if (v === null || v === undefined) delete merged[key];
+      if (Array.isArray(v) && v.length === 0) delete merged[key];
+    }
+    return merged as IntusUserContext;
   }, []);
 
   const saveProfile = useCallback(async (userId: string, profile: {
