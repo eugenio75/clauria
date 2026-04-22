@@ -75,7 +75,7 @@ const Index = () => {
   const isGuest = !!user?.is_anonymous;
   const isAuthenticated = !!user;
   const canEnterAuthenticatedFlow = isAuthenticated && (!isGuest || skipLogin);
-  const { loadContext, saveProfile, resetContext } = useIntusContext();
+  const { loadContext, saveProfile, resetContext, getConversationId } = useIntusContext();
   const { t, lang } = useLanguage();
 
   const activeCompanionData = COMPANIONS.find(c => c.id === activeCompanion) || COMPANIONS[0];

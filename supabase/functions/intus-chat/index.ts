@@ -43,8 +43,15 @@ serve(async (req) => {
         ? lastUserMsg.content
         : body.user_message || "";
 
-    // One user = one permanent conversation (userId as conversation_id)
-    const conversation_id = userId || guestToken || "anonymous";
+    // Conversation id is generated fresh by the client on every page load and
+    // after every memory reset. We honor whatever the client sends so the RAG
+    // backend doesn't reload stale history. Fall back to userId only if the
+    // client didn't send one (legacy behavior).
+    const conversation_id =
+      (typeof body.conversation_id === "string" && body.conversation_id) ||
+      userId ||
+      guestToken ||
+      "anonymous";
 
     const response = await fetch(`${RAG_URL}/orchestrate`, {
       method: "POST",
