@@ -381,6 +381,11 @@ const Index = () => {
     setIsTyping(true);
     try {
       const ctx = await loadContext(user.id);
+      const hasRealContext =
+        !!(ctx as any)?.user_name ||
+        ((ctx as any)?.session_count ?? 0) > 0 ||
+        !!(ctx as any)?.last_session_at;
+      const safeContext = hasRealContext ? ctx : {};
 
       const { data, error } = await supabase.functions.invoke("intus-chat", {
         body: {
@@ -391,7 +396,7 @@ const Index = () => {
               content: m.content,
             })),
           conversation_id: getConversationId(),
-          userContext: ctx,
+          userContext: safeContext,
           userId: user.id,
           localHour: new Date().getHours(),
           isNewSession,
