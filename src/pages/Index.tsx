@@ -128,12 +128,20 @@ const Index = () => {
     setIsTyping(true);
     try {
       const ctx = await loadContext(user.id);
+      // If the DB has no profile + no session history for this user, send an
+      // empty userContext so the backend cannot reuse stale mood/theme data
+      // from a previous (now-purged) session.
+      const hasRealContext =
+        !!(ctx as any)?.user_name ||
+        ((ctx as any)?.session_count ?? 0) > 0 ||
+        !!(ctx as any)?.last_session_at;
+      const safeContext = hasRealContext ? ctx : {};
       const { data, error } = await supabase.functions.invoke("intus-chat", {
         body: {
           user_message: "__init__",
           messages: [],
           conversation_id: getConversationId(),
-          userContext: ctx,
+          userContext: safeContext,
           userId: user.id,
           localHour: new Date().getHours(),
           isNewSession,
