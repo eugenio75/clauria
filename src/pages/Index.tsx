@@ -75,7 +75,7 @@ const Index = () => {
   const isGuest = !!user?.is_anonymous;
   const isAuthenticated = !!user;
   const canEnterAuthenticatedFlow = isAuthenticated && (!isGuest || skipLogin);
-  const { loadContext, saveProfile, resetContext } = useIntusContext();
+  const { loadContext, saveProfile, resetContext, getConversationId } = useIntusContext();
   const { t, lang } = useLanguage();
 
   const activeCompanionData = COMPANIONS.find(c => c.id === activeCompanion) || COMPANIONS[0];
@@ -132,6 +132,7 @@ const Index = () => {
         body: {
           user_message: "__init__",
           messages: [],
+          conversation_id: getConversationId(),
           userContext: ctx,
           userId: user.id,
           localHour: new Date().getHours(),
@@ -381,6 +382,7 @@ const Index = () => {
               role: m.sender === "ai" ? "assistant" : "user",
               content: m.content,
             })),
+          conversation_id: getConversationId(),
           userContext: ctx,
           userId: user.id,
           localHour: new Date().getHours(),
@@ -531,20 +533,18 @@ const Index = () => {
   const handleResetMemory = async () => {
     if (user) {
       try {
+        // Wipes Supabase tables AND regenerates the in-memory conversation_id,
+        // so the RAG backend treats the next message as a brand-new conversation.
         await resetContext(user.id);
       } catch (err) {
         console.error("Failed to reset context:", err);
       }
     }
-    setProfile({ name: "", ageRange: "", lifeContext: "", emotionalEntry: "", onboardingComplete: false });
-    setMessages([]);
-    setOnboardingStep(0);
-    hasCheckedRef.current = false;
-    onboardingStartedRef.current = false;
-    greetingSentRef.current = false;
-    setSkipLogin(false);
+    sessionStorage.clear();
     localStorage.removeItem("intus_welcome_seen");
-    setShowWelcome(true);
+    // Hard reload guarantees a clean slate: fresh conversation_id, no stale state,
+    // and the onboarding flow restarts from "Come ti chiami?".
+    window.location.reload();
   };
 
 
