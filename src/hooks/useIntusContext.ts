@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/runtime-client";
 
 export interface IntusUserContext {
@@ -27,6 +27,20 @@ export interface IntusUserContext {
     step_accepted?: boolean | null;
     theme?: string;
   }>;
+}
+
+// Module-level conversation id: fresh on every page load (NOT persisted across sessions).
+// This guarantees the backend treats each page load as a new conversation, so a returning
+// user (or a user who reset memory) does not accidentally re-load stale Supabase history.
+let CURRENT_CONVERSATION_ID = crypto.randomUUID();
+
+export function getConversationId(): string {
+  return CURRENT_CONVERSATION_ID;
+}
+
+export function regenerateConversationId(): string {
+  CURRENT_CONVERSATION_ID = crypto.randomUUID();
+  return CURRENT_CONVERSATION_ID;
 }
 
 export function useIntusContext() {
@@ -64,7 +78,10 @@ export function useIntusContext() {
       supabase.from("intus_profiles").delete().eq("id", userId),
       supabase.from("intus_context").delete().eq("user_id", userId),
     ]);
+    // After wiping server-side memory, force a brand-new conversation id so the
+    // RAG backend doesn't reload the old conversation on the next message.
+    regenerateConversationId();
   }, []);
 
-  return { loadContext, saveProfile, resetContext };
+  return { loadContext, saveProfile, resetContext, getConversationId, regenerateConversationId };
 }
