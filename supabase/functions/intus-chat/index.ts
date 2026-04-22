@@ -60,7 +60,6 @@ serve(async (req) => {
         conversation_id,
         user_id: userId || guestToken || "anonymous",
         user_message: userMessage,
-        guest_token: guestToken,
       }),
       signal: AbortSignal.timeout(30000),
     });
