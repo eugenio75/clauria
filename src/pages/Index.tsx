@@ -170,7 +170,11 @@ const Index = () => {
   const startOnboarding = useCallback(() => {
     if (onboardingStartedRef.current) return;
     onboardingStartedRef.current = true;
-
+    // Onboarding gestito dal server RAG
+    setProfile(prev => ({ ...prev, onboardingComplete: true }));
+    setAppPhase("conversation");
+    initChatFromBackend();
+    return;
     if (profile.name && profile.ageRange && profile.lifeContext) {
       setProfile(prev => ({ ...prev, onboardingComplete: true }));
       setAppPhase("conversation");
@@ -468,7 +472,8 @@ const Index = () => {
     setLetterModeOffered(false);
 
     if (appPhase === "onboarding") {
-      handleOnboardingResponse(text);
+      // Onboarding gestito dal server RAG — non dal frontend
+      sendToAI([...messages, { id: Date.now().toString(), content: text, sender: "user" as const }]);
     } else {
       sendToAI(newMessages);
     }

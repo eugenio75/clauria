@@ -24,8 +24,8 @@ Deno.serve(async (req) => {
 
   try {
     const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      Deno.env.get("SUPABASE_URL") || "https://evmtmdvmlzlppldnacgc.supabase.co",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2bXRtZHZtbHpscHBsZG5hY2djIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTA3NDc1MiwiZXhwIjoyMDkwNjUwNzUyfQ.KOXR3-JeuNhC-j6wp0wTWT-NJ8mo7nRu3PsRqL0zWjk"
     );
 
     const body = await req.json().catch(() => null);
